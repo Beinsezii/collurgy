@@ -3,11 +3,14 @@ use std::{env, ops::RangeInclusive};
 use colcon::{convert_space, srgb_to_irgb, Space};
 
 use eframe::{
-    egui::{self, CentralPanel, Context, Frame, Grid, Label, RichText, Sense, Ui, Widget, TextureOptions},
+    egui::{self, CentralPanel, Context, Frame, Grid, Label, RichText, Sense, Widget},
     emath::Align2,
-    epaint::{Color32, Rounding, Stroke, Rect, ColorImage, Rgba},
+    epaint::{Color32, Rounding, Stroke},
     App, CreationContext,
 };
+
+mod lch;
+use lch::LCH;
 
 use super::Collurgy;
 
@@ -155,75 +158,6 @@ impl<'a> Widget for ColorScale<'a> {
     }
 }
 
-struct LCHAdj<'a> {
-    value: &'a mut [f32; 3],
-    text: String,
-    fill: Color32,
-    font_size: f32,
-    scale: f32,
-}
-
-impl<'a> LCHAdj<'a> {
-    pub fn new(
-        value: &'a mut [f32; 3],
-        text: impl ToString,
-        fill: Color32,
-        font_size: f32,
-        scale: f32,
-    ) -> Self {
-        Self {
-            value,
-            text: text.to_string(),
-            fill,
-            font_size,
-            scale,
-        }
-    }
-}
-
-impl<'a> Widget for LCHAdj<'a> {
-    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        let (chrect, chresponse) = ui.allocate_at_least((72.0 * self.scale, 100.0 * self.scale).into(), Sense::click_and_drag());
-        if chresponse.dragged(){
-            if let Some(pos) = chresponse.interact_pointer_pos() {
-                if chrect.contains(pos) {
-                    let (x, y) = (pos - chrect.left_top()).into();
-                    self.value[1] = 100.0 - (y / self.scale).round();
-                    self.value[2] = (x / self.scale).round() * 5.0;
-                    println!("{:?}", self.value);
-                }
-            }
-        }
-        let chpaint = ui.painter_at(chrect);
-        let mut pixels = [self.value[0]; 3 * 72 * 101];
-        for c in 0..=100 {
-            for h in 0..72 {
-                let index = (h + c * 72) * 3;
-                let p: &mut [f32; 3] = pixels.get_mut(index..(index+3)).unwrap().try_into().unwrap();
-                p[1] = 100.0 - c as f32;
-                p[2] = h as f32 * 5.0;
-                convert_space(Space::LCH, Space::LRGB, p);
-            }
-        }
-        let img = ColorImage{
-            size: [72, 101],
-            pixels: pixels.chunks_exact(3).map(|p| Rgba::from_rgba_unmultiplied(p[0], p[1], p[2], 1.0).into()).collect::<Vec<Color32>>(),
-        };
-        let texture = ui.ctx().load_texture(self.text, img, TextureOptions::NEAREST);
-        chpaint.image(texture.id(), chrect, Rect::from_min_max((0.0, 0.0).into(), (1.0, 1.0).into()), Color32::WHITE);
-        let chpos = chrect.left_top() + (self.value[2] / 5.0 * self.scale, (100.0 - self.value[1]) * self.scale).into();
-
-        for (x, y) in [(0.0, 1.0), (0.0, -1.0), (1.0, 0.0), (-1.0, 0.0)] {
-            chpaint.line_segment([chpos + (x * self.scale, y * self.scale).into(), chpos + (x * 4.0 * self.scale, y * 4.0 * self.scale).into()], Stroke {
-                color: self.fill,
-                width: 1.0 * self.scale,
-            });
-        }
-
-        chresponse
-    }
-}
-
 pub struct CollurgyUI {
     data: Collurgy,
     scale: f32,
@@ -275,10 +209,34 @@ impl App for CollurgyUI {
                 ui.spacing_mut().item_spacing = (4.0 * s, 4.0 * s).into();
                 ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing = (4.0 * s, 1.0 * s).into();
-                    ui.add(LCHAdj::new(&mut self.data.foreground, "Foreground", colors[0], 15.0, s * 2.0));
-                    ui.add(LCHAdj::new(&mut self.data.background, "Background", colors[15], 15.0, s * 2.0));
-                    ui.add(LCHAdj::new(&mut self.data.spectrum, "Spectrum", colors[0], 15.0, s * 2.0));
-                    ui.add(LCHAdj::new(&mut self.data.spectrum_bright, "Spectrum Bright", colors[0], 15.0, s * 2.0));
+                    ui.add(LCH::new(
+                        &mut self.data.foreground,
+                        "Foreground",
+                        colors[0],
+                        14.0 * s,
+                        s * 2.0,
+                    ));
+                    ui.add(LCH::new(
+                        &mut self.data.background,
+                        "Background",
+                        colors[15],
+                        14.0 * s,
+                        s * 2.0,
+                    ));
+                    ui.add(LCH::new(
+                        &mut self.data.spectrum,
+                        "Spectrum",
+                        colors[0],
+                        14.0 * s,
+                        s * 2.0,
+                    ));
+                    ui.add(LCH::new(
+                        &mut self.data.spectrum_bright,
+                        "Spectrum Bright",
+                        colors[0],
+                        14.0 * s,
+                        s * 2.0,
+                    ));
                 });
                 Grid::new("color_buttons")
                     .spacing((4.0 * s, 4.0 * s))
