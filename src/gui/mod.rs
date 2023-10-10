@@ -209,6 +209,17 @@ impl CollurgyUI {
 
 impl App for CollurgyUI {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
+        ctx.input(|input| {
+            for f in &input.raw.dropped_files {
+                if let Some(path) = &f.path {
+                    if let Ok(s) = read_to_string(path) {
+                        if let Ok(collurgy) = toml::from_str::<Collurgy>(&s) {
+                            self.data = collurgy;
+                        }
+                    }
+                }
+            }
+        });
         let s = self.scale;
         let colors: [Color32; 16] = self.data.compute().map(|c| {
             let c = srgb_to_irgb(c);
