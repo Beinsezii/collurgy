@@ -80,7 +80,8 @@ impl<'a> Widget for LCH<'a> {
                             .map(|c| {
                                 (0..72)
                                     .map(|h| {
-                                        let mut p = [self.value[0], (100 - c) as f32, h as f32 * 5.0];
+                                        let mut p =
+                                            [self.value[0], (100 - c) as f32, h as f32 * 5.0];
                                         convert_space(Space::LCH, Space::LRGB, &mut p);
                                         Rgba::from_rgb(p[0], p[1], p[2]).into()
                                     })
@@ -89,7 +90,8 @@ impl<'a> Widget for LCH<'a> {
                             .reduce(|mut acc, mut e| {
                                 acc.append(&mut e);
                                 acc
-                            }).unwrap(),
+                            })
+                            .unwrap(),
                     };
                     let chtexture = ui.ctx().load_texture(
                         format!("{} CH", self.text),

@@ -1,4 +1,10 @@
-use std::{collections::HashMap, env, ops::RangeInclusive, fmt::Display, fs::{self, read_to_string}, thread, sync::mpsc};
+use std::{
+    collections::HashMap,
+    env,
+    fmt::Display,
+    fs::{self, read_to_string},
+    ops::RangeInclusive,
+};
 
 use colcon::srgb_to_irgb;
 
@@ -25,7 +31,7 @@ fn scale_factor() -> f32 {
     }
 }
 
-// ColorButton {{{ 
+// ColorButton {{{
 struct ColorButton {
     text: String,
     color: Color32,
@@ -79,9 +85,9 @@ impl Widget for ColorButton {
         response
     }
 }
-// ColorButton }}} 
+// ColorButton }}}
 
-// ColorScale {{{ 
+// ColorScale {{{
 struct ColorScale<'a> {
     value: &'a mut f32,
     range: RangeInclusive<f32>,
@@ -161,7 +167,7 @@ impl<'a> Widget for ColorScale<'a> {
         response
     }
 }
-// ColorScale }}} 
+// ColorScale }}}
 
 pub enum Output {
     Exporter(String),
@@ -201,7 +207,7 @@ impl CollurgyUI {
     fn output(&self) -> String {
         match &self.output {
             Output::Exporter(s) => self.exporters[s].export(&self.data),
-            Output::TOML => toml::to_string(&self.data).unwrap()
+            Output::TOML => toml::to_string(&self.data).unwrap(),
         }
     }
     // }}}
@@ -310,80 +316,75 @@ impl App for CollurgyUI {
                     })
                 // }}}
             });
-        SidePanel::right("ExportPan").min_width(200.0).show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                // {{{
-                ui.menu_button(self.output.to_string(), |ui| {
-                    let mut vals: Vec<String> = self.exporters.keys().cloned().collect();
-                    vals.sort();
-                    for exp in vals.into_iter() {
-                        if ui.button(format!("Export/{}", &exp)).clicked() {
-                            self.output = Output::Exporter(exp);
+        SidePanel::right("ExportPan")
+            .min_width(200.0)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    // {{{
+                    ui.menu_button(self.output.to_string(), |ui| {
+                        let mut vals: Vec<String> = self.exporters.keys().cloned().collect();
+                        vals.sort();
+                        for exp in vals.into_iter() {
+                            if ui.button(format!("Export/{}", &exp)).clicked() {
+                                self.output = Output::Exporter(exp);
+                                ui.close_menu();
+                            }
+                        }
+                        if ui.button("Save/TOML").clicked() {
+                            self.output = Output::TOML;
                             ui.close_menu();
                         }
-                    }
-                    if ui.button("Save/TOML").clicked() {
-                        self.output = Output::TOML;
-                        ui.close_menu();
-                    }
-                });
-                if ui.button("Copy").clicked() {
-                    ui.output_mut(|o| {
-                        o.copied_text = self.output();
                     });
-                }
-                if ui.button("Save").clicked() {
-                    let mut dialog = FileDialog::new();
-                    match &self.output {
-                        Output::Exporter(s) => {
-                            let exp = &self.exporters[s];
-                            if let Some(p) = &exp.path {
-                                if let Some(name) = p.file_name() {
-                                    dialog = dialog.set_file_name(name.to_string_lossy())
+                    if ui.button("Copy").clicked() {
+                        ui.output_mut(|o| {
+                            o.copied_text = self.output();
+                        });
+                    }
+                    if ui.button("Save").clicked() {
+                        let mut dialog = FileDialog::new();
+                        match &self.output {
+                            Output::Exporter(s) => {
+                                let exp = &self.exporters[s];
+                                if let Some(p) = &exp.path {
+                                    if let Some(name) = p.file_name() {
+                                        dialog = dialog.set_file_name(name.to_string_lossy())
+                                    }
+                                    if let Some(dir) = p.parent() {
+                                        dialog = dialog.set_directory(dir)
+                                    }
+                                } else {
+                                    dialog = dialog.set_file_name(&exp.name)
                                 }
-                                if let Some(dir) = p.parent() {
-                                    dialog = dialog.set_directory(dir)
-                                }
-                            } else {
-                                dialog = dialog.set_file_name(&exp.name)
                             }
-                        },
-                        Output::TOML => dialog = dialog.set_file_name("collurgy.toml"),
+                            Output::TOML => dialog = dialog.set_file_name("collurgy.toml"),
+                        }
+                        // on Wayland this has like a 75% chance of making egui go poof
+                        if let Some(file) = dialog.save_file() {
+                            let _ = fs::write(file, self.output());
+                        }
                     }
-                    // egui just delets itself if update() blocks...
-                    let data = self.output();
-                    thread::spawn(move || if let Some(file) = dialog.save_file() {
-                        let _ = fs::write(file, data);
-                    });
-                }
-                ui.menu_button("Load", |ui| {
-                    if ui.button("TOML").clicked() {
-                        // dood...
-                        let (tx, rx) = mpsc::channel::<Option<Collurgy>>();
-                        let dialog = FileDialog::new().set_file_name("collurgy.toml").add_filter("collurgy toml", &["toml"]);
-                        thread::spawn(move || {
+                    ui.menu_button("Load", |ui| {
+                        if ui.button("TOML").clicked() {
+                            // dood...
+                            let dialog = FileDialog::new()
+                                .set_file_name("collurgy.toml")
+                                .add_filter("collurgy toml", &["toml"]);
                             if let Some(path) = dialog.pick_file() {
                                 if let Ok(s) = read_to_string(path) {
                                     if let Ok(collurgy) = toml::from_str::<Collurgy>(&s) {
-                                        let _ = tx.send(Some(collurgy));
-                                        return;
+                                        self.data = collurgy
                                     }
                                 }
                             }
-                            let _ = tx.send(None);
-                        });
-                        if let Ok(Some(collurgy)) = rx.recv() {
-                            self.data = collurgy
+                            // even tx/rx crashes if this is toplevel...
+                            ui.close_menu();
                         }
-                        // even tx/rx crashes if this is toplevel...
-                        ui.close_menu();
-                    }
+                    });
+                    // }}}
                 });
-                // }}}
+                // sneaky immutable textedit hack?
+                ui.code_editor(&mut self.output().as_str());
             });
-            // sneaky immutable textedit hack?
-            ui.code_editor(&mut self.output().as_str());
-        });
     }
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         [0.0, 0.0, 0.0, 0.0]
