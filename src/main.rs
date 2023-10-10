@@ -147,10 +147,13 @@ impl Exporter {
 
 fn collect_exporters(paths: Vec<PathBuf>) -> HashMap<String, Exporter> {
     let mut result = HashMap::new();
+    #[cfg(feature = "builtins")]
     let builtins = vec![
         include_str!("../builtins/ppm.toml"),
         include_str!("../builtins/xresources.toml"),
     ];
+    #[cfg(not(feature = "builtins"))]
+    let builtins = Vec::new();
     let mut found = Vec::new();
     for p in paths {
         if p.is_dir() {

@@ -10,3 +10,7 @@ colcon = "0.2"
 eframe = "0.23"
 serde = "1"
 toml = "0.8"
+
+[features]
+builtins = []
+default = ["builtins"]
