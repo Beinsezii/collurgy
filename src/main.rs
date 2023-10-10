@@ -1,4 +1,6 @@
-use colcon::{convert_space, Space};
+use std::{collections::HashMap, ffi::OsStr, fs::read_to_string, path::PathBuf};
+
+use colcon::{convert_space, irgb_to_hex, srgb_to_irgb, Space};
 use serde::{Deserialize, Serialize};
 
 mod gui;
@@ -91,13 +93,103 @@ impl Collurgy {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct Exporter {
+    name: String,
+    formatter: String,
+    path: Option<PathBuf>,
+}
+
+impl Exporter {
+    fn export(&self, data: &Collurgy) -> String {
+        let frgb = data.compute();
+        let irgb = frgb.map(|pixel| srgb_to_irgb(pixel));
+        let hex = irgb.map(|pixel| irgb_to_hex(pixel));
+        let mut result = self.formatter.clone();
+        let mut swaps = irgb
+            .iter()
+            .zip(frgb.iter())
+            .zip(hex.iter())
+            .enumerate()
+            .map(|(n, ((ip, fp), hex))| {
+                vec![
+                    (format!("{{R{}}}", n), ip[0].to_string()),
+                    (format!("{{G{}}}", n), ip[1].to_string()),
+                    (format!("{{B{}}}", n), ip[2].to_string()),
+                    (format!("{{FR{}}}", n), fp[0].to_string()),
+                    (format!("{{FG{}}}", n), fp[1].to_string()),
+                    (format!("{{FB{}}}", n), fp[2].to_string()),
+                    (format!("{{HEX{}}}", n), hex.clone()),
+                ]
+            })
+            .reduce(|mut a, mut e| {
+                a.append(&mut e);
+                a
+            })
+            .unwrap();
+
+        swaps.append(&mut vec![
+            ("{ACCR}".to_string(), irgb[data.accent][0].to_string()),
+            ("{ACCG}".to_string(), irgb[data.accent][1].to_string()),
+            ("{ACCB}".to_string(), irgb[data.accent][2].to_string()),
+            ("{ACCFR}".to_string(), frgb[data.accent][0].to_string()),
+            ("{ACCFG}".to_string(), frgb[data.accent][1].to_string()),
+            ("{ACCFB}".to_string(), frgb[data.accent][2].to_string()),
+            ("{ACCHEX}".to_string(), hex[data.accent].clone()),
+        ]);
+
+        for (a, b) in swaps {
+            result = result.replace(&a, &b)
+        }
+        result
+    }
+}
+
+fn collect_exporters(paths: Vec<PathBuf>) -> HashMap<String, Exporter> {
+    let mut result = HashMap::new();
+    let builtins = vec![
+        include_str!("../builtins/ppm.toml"),
+        include_str!("../builtins/xresources.toml"),
+    ];
+    let mut found = Vec::new();
+    for p in paths {
+        if p.is_dir() {
+            if let Ok(files) = p.read_dir() {
+                for f in files.filter_map(|f| f.ok()) {
+                    if f.path().extension() == Some(OsStr::new("toml")) {
+                        if let Ok(s) = read_to_string(f.path()) {
+                            found.push(s)
+                        }
+                    }
+                }
+            }
+        } else if p.extension() == Some(OsStr::new("toml")) {
+            if let Ok(s) = read_to_string(p) {
+                found.push(s)
+            }
+        }
+    }
+    for s in builtins.into_iter().chain(found.iter().map(|s| s.as_str())) {
+        if let Ok(exporter) = toml::from_str::<Exporter>(s) {
+            result.insert(exporter.name.clone(), exporter);
+        }
+    }
+    result
+}
+
 fn main() {
     eframe::run_native(
         "Collurgy",
         eframe::NativeOptions {
             ..Default::default()
         },
-        Box::new(|cc| Box::new(CollurgyUI::new(cc, Collurgy::default()))),
+        Box::new(|cc| {
+            Box::new(CollurgyUI::new(
+                cc,
+                Collurgy::default(),
+                collect_exporters(vec![PathBuf::from("./exporters/")]),
+            ))
+        }),
     )
     .unwrap();
 }

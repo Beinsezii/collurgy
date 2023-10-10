@@ -1,9 +1,9 @@
-use std::{env, ops::RangeInclusive};
+use std::{collections::HashMap, env, ops::RangeInclusive};
 
 use colcon::{convert_space, srgb_to_irgb, Space};
 
 use eframe::{
-    egui::{self, CentralPanel, Context, Frame, Grid, Label, RichText, Sense, Widget},
+    egui::{self, CentralPanel, Context, Frame, Grid, Label, RichText, Sense, SidePanel, Widget},
     emath::Align2,
     epaint::{Color32, Rounding, Stroke},
     App, CreationContext,
@@ -12,7 +12,7 @@ use eframe::{
 mod lch;
 use lch::LCH;
 
-use super::Collurgy;
+use super::{Collurgy, Exporter};
 
 fn scale_factor() -> f32 {
     if let Ok(val) = env::var("GDK_DPI_SCALE") {
@@ -160,13 +160,21 @@ impl<'a> Widget for ColorScale<'a> {
 
 pub struct CollurgyUI {
     data: Collurgy,
+    exporters: HashMap<String, Exporter>,
+    exporter: String,
     scale: f32,
 }
 
 impl CollurgyUI {
-    pub fn new(_cc: &CreationContext, data: Collurgy) -> Self {
+    pub fn new(
+        _cc: &CreationContext,
+        data: Collurgy,
+        exporters: HashMap<String, Exporter>,
+    ) -> Self {
         Self {
             data,
+            exporter: exporters.keys().min().unwrap().to_string(),
+            exporters,
             scale: scale_factor(),
         }
     }
@@ -262,6 +270,27 @@ impl App for CollurgyUI {
                         }
                     })
             });
+        SidePanel::right("ExportPan").min_width(200.0).show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.menu_button(self.exporter.clone(), |ui| {
+                    let mut vals: Vec<String> = self.exporters.keys().cloned().collect();
+                    vals.sort();
+                    for exp in vals.into_iter() {
+                        if ui.button(&exp).clicked() {
+                            self.exporter = exp;
+                            ui.close_menu();
+                        }
+                    }
+                });
+                if ui.button("Copy").clicked() {
+                    ui.output_mut(|o| {
+                        o.copied_text = self.exporters[&self.exporter].export(&self.data)
+                    });
+                }
+            });
+            // sneaky immutable textedit hack?
+            ui.code_editor(&mut self.exporters[&self.exporter].export(&self.data).as_str())
+        });
     }
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         [0.0, 0.0, 0.0, 0.0]

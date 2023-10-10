@@ -1,0 +1,7 @@
+name = "Test"
+formatter = """
+Accent
+  R: {ACCFR}
+  G: {ACCFG}
+  B: {ACCFB}
+"""
