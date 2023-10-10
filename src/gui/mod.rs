@@ -1,6 +1,6 @@
-use std::{collections::HashMap, env, ops::RangeInclusive};
+use std::{collections::HashMap, env, ops::RangeInclusive, fmt::Display, fs::{self, read_to_string}, thread, sync::mpsc};
 
-use colcon::{convert_space, srgb_to_irgb, Space};
+use colcon::srgb_to_irgb;
 
 use eframe::{
     egui::{self, CentralPanel, Context, Frame, Grid, Label, RichText, Sense, SidePanel, Widget},
@@ -11,6 +11,7 @@ use eframe::{
 
 mod lch;
 use lch::LCH;
+use rfd::FileDialog;
 
 use super::{Collurgy, Exporter};
 
@@ -24,6 +25,7 @@ fn scale_factor() -> f32 {
     }
 }
 
+// ColorButton {{{ 
 struct ColorButton {
     text: String,
     color: Color32,
@@ -77,7 +79,9 @@ impl Widget for ColorButton {
         response
     }
 }
+// ColorButton }}} 
 
+// ColorScale {{{ 
 struct ColorScale<'a> {
     value: &'a mut f32,
     range: RangeInclusive<f32>,
@@ -157,15 +161,31 @@ impl<'a> Widget for ColorScale<'a> {
         response
     }
 }
+// ColorScale }}} 
+
+pub enum Output {
+    Exporter(String),
+    TOML,
+}
+
+impl Display for Output {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Output::Exporter(s) => f.write_fmt(format_args!("Export/{}", s)),
+            Output::TOML => f.write_str("Save/TOML"),
+        }
+    }
+}
 
 pub struct CollurgyUI {
     data: Collurgy,
     exporters: HashMap<String, Exporter>,
-    exporter: String,
+    output: Output,
     scale: f32,
 }
 
 impl CollurgyUI {
+    // {{{
     pub fn new(
         _cc: &CreationContext,
         data: Collurgy,
@@ -173,11 +193,18 @@ impl CollurgyUI {
     ) -> Self {
         Self {
             data,
-            exporter: exporters.keys().min().unwrap().to_string(),
+            output: Output::Exporter(exporters.keys().min().unwrap().to_string()),
             exporters,
             scale: scale_factor(),
         }
     }
+    fn output(&self) -> String {
+        match &self.output {
+            Output::Exporter(s) => self.exporters[s].export(&self.data),
+            Output::TOML => toml::to_string(&self.data).unwrap()
+        }
+    }
+    // }}}
 }
 
 impl App for CollurgyUI {
@@ -190,6 +217,7 @@ impl App for CollurgyUI {
         CentralPanel::default()
             .frame(Frame::none().fill(colors[8]))
             .show(&ctx, |ui| {
+                // {{{
                 ui.horizontal(|ui| {
                     ui.add_sized(
                         (150.0, 20.0),
@@ -269,27 +297,81 @@ impl App for CollurgyUI {
                             }
                         }
                     })
+                // }}}
             });
         SidePanel::right("ExportPan").min_width(200.0).show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.menu_button(self.exporter.clone(), |ui| {
+                // {{{
+                ui.menu_button(self.output.to_string(), |ui| {
                     let mut vals: Vec<String> = self.exporters.keys().cloned().collect();
                     vals.sort();
                     for exp in vals.into_iter() {
-                        if ui.button(&exp).clicked() {
-                            self.exporter = exp;
+                        if ui.button(format!("Export/{}", &exp)).clicked() {
+                            self.output = Output::Exporter(exp);
                             ui.close_menu();
                         }
+                    }
+                    if ui.button("Save/TOML").clicked() {
+                        self.output = Output::TOML;
+                        ui.close_menu();
                     }
                 });
                 if ui.button("Copy").clicked() {
                     ui.output_mut(|o| {
-                        o.copied_text = self.exporters[&self.exporter].export(&self.data)
+                        o.copied_text = self.output();
                     });
                 }
+                if ui.button("Save").clicked() {
+                    let mut dialog = FileDialog::new();
+                    match &self.output {
+                        Output::Exporter(s) => {
+                            let exp = &self.exporters[s];
+                            if let Some(p) = &exp.path {
+                                if let Some(name) = p.file_name() {
+                                    dialog = dialog.set_file_name(name.to_string_lossy())
+                                }
+                                if let Some(dir) = p.parent() {
+                                    dialog = dialog.set_directory(dir)
+                                }
+                            } else {
+                                dialog = dialog.set_file_name(&exp.name)
+                            }
+                        },
+                        Output::TOML => dialog = dialog.set_file_name("collurgy.toml"),
+                    }
+                    // egui just delets itself if update() blocks...
+                    let data = self.output();
+                    thread::spawn(move || if let Some(file) = dialog.save_file() {
+                        let _ = fs::write(file, data);
+                    });
+                }
+                ui.menu_button("Load", |ui| {
+                    if ui.button("TOML").clicked() {
+                        // dood...
+                        let (tx, rx) = mpsc::channel::<Option<Collurgy>>();
+                        let dialog = FileDialog::new().set_file_name("collurgy.toml").add_filter("collurgy toml", &["toml"]);
+                        thread::spawn(move || {
+                            if let Some(path) = dialog.pick_file() {
+                                if let Ok(s) = read_to_string(path) {
+                                    if let Ok(collurgy) = toml::from_str::<Collurgy>(&s) {
+                                        let _ = tx.send(Some(collurgy));
+                                        return;
+                                    }
+                                }
+                            }
+                            let _ = tx.send(None);
+                        });
+                        if let Ok(Some(collurgy)) = rx.recv() {
+                            self.data = collurgy
+                        }
+                        // even tx/rx crashes if this is toplevel...
+                        ui.close_menu();
+                    }
+                });
+                // }}}
             });
             // sneaky immutable textedit hack?
-            ui.code_editor(&mut self.exporters[&self.exporter].export(&self.data).as_str())
+            ui.code_editor(&mut self.output().as_str());
         });
     }
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {

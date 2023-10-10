@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 colcon = "0.2"
 eframe = "0.23"
+rfd = "0.12"
 serde = "1"
 toml = "0.8"
 

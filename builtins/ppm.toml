@@ -18,4 +18,4 @@ P3 8 2 255
 {R14} {G14} {B14}
 {R15} {G15} {B15}
 """
-path = "collurgy.toml"
+path = "collurgy.ppm"
