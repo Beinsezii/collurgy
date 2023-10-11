@@ -217,7 +217,13 @@ impl App for CollurgyUI {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         ctx.input(|input| {
             for f in &input.raw.dropped_files {
-                if let Some(path) = &f.path {
+                if let Some(bytes) = &f.bytes {
+                    if let Ok(s) = std::str::from_utf8(bytes) {
+                        if let Ok(collurgy) = toml::from_str(s) {
+                            self.data = collurgy;
+                        }
+                    }
+                } else if let Some(path) = &f.path {
                     if let Ok(s) = read_to_string(path) {
                         if let Ok(collurgy) = toml::from_str::<Collurgy>(&s) {
                             self.data = collurgy;
