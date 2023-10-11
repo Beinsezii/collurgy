@@ -7,7 +7,8 @@ edition = "2021"
 
 [dependencies]
 colcon = "0.2"
-eframe = {version = "0.23", features=["wgpu"]}
+# disable wayland
+eframe = {version = "0.23", default_features=false, features=["accesskit", "default_fonts", "x11", "wgpu"]}
 rfd = "0.12"
 serde = "1"
 toml = "0.8"
@@ -15,3 +16,4 @@ toml = "0.8"
 [features]
 builtins = []
 default = ["builtins"]
+wayland = ["eframe/wayland"]
