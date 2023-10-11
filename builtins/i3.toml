@@ -1,4 +1,4 @@
-name = "i3"
+name = "I3"
 path = "~/.config/i3/config"
 formatter = """
 set $acc {ACCHEX}
