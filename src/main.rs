@@ -150,6 +150,7 @@ fn collect_exporters(paths: Vec<PathBuf>) -> HashMap<String, Exporter> {
     #[cfg(feature = "builtins")]
     let builtins = vec![
         include_str!("../builtins/dwarf.toml"),
+        include_str!("../builtins/i3.toml"),
         include_str!("../builtins/ppm.toml"),
         include_str!("../builtins/xresources.toml"),
     ];

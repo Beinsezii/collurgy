@@ -1,0 +1,29 @@
+name = "i3"
+path = "~/.config/i3/config"
+formatter = """
+set $acc {ACCHEX}
+set $fg  {HEX15}
+set $bg  {HEX0}
+set $fg2 {HEX7}
+set $bg2 {HEX8}
+
+# class                 border background text indicator child_border
+client.focused          $acc   $acc       $bg  $fg       $acc
+client.focused_inactive $fg2   $fg2       $bg  $fg       $fg2
+client.unfocused        $bg    $bg        $fg2 $fg2      $bg
+client.urgent           $fg    $fg        $bg  $acc      $fg
+client.placeholder      $bg2   $bg2       $fg  $bg       $bg2
+client.background              $bg
+
+bar {
+    colors{
+        background $bg
+        statusline $fg
+        separator $acc
+        # class            stroke fill text
+        inactive_workspace $bg    $bg  $fg
+        focused_workspace  $acc   $acc $bg
+        urgent_workspace   $acc   $bg  $fg
+        }
+}
+"""

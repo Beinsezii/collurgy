@@ -199,7 +199,7 @@ impl CollurgyUI {
     ) -> Self {
         Self {
             data,
-            output: Output::Exporter(exporters.keys().min().unwrap().to_string()),
+            output: Output::TOML,
             exporters,
             scale: scale_factor(),
         }
