@@ -171,6 +171,7 @@ impl<'a> Widget for ColorScale<'a> {
 
 pub enum Output {
     Exporter(String),
+    JSON,
     TOML,
 }
 
@@ -178,6 +179,7 @@ impl Display for Output {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Output::Exporter(s) => f.write_fmt(format_args!("Export/{}", s)),
+            Output::JSON => f.write_str("Save/JSON"),
             Output::TOML => f.write_str("Save/TOML"),
         }
     }
@@ -207,7 +209,15 @@ impl CollurgyUI {
     fn output(&self) -> String {
         match &self.output {
             Output::Exporter(s) => self.exporters[s].export(&self.data),
+            Output::JSON => serde_json::to_string(&self.data).unwrap(),
             Output::TOML => toml::to_string(&self.data).unwrap(),
+        }
+    }
+    fn apply_serial(&mut self, data: &str) {
+        if let Ok(collurgy) = toml::from_str(data) {
+            self.data = collurgy
+        } else if let Ok(collurgy) = serde_json::from_str(data) {
+            self.data = collurgy
         }
     }
     // }}}
@@ -219,15 +229,11 @@ impl App for CollurgyUI {
             for f in &input.raw.dropped_files {
                 if let Some(bytes) = &f.bytes {
                     if let Ok(s) = std::str::from_utf8(bytes) {
-                        if let Ok(collurgy) = toml::from_str(s) {
-                            self.data = collurgy;
-                        }
+                        self.apply_serial(s)
                     }
                 } else if let Some(path) = &f.path {
                     if let Ok(s) = read_to_string(path) {
-                        if let Ok(collurgy) = toml::from_str::<Collurgy>(&s) {
-                            self.data = collurgy;
-                        }
+                        self.apply_serial(&s)
                     }
                 }
             }
@@ -336,6 +342,10 @@ impl App for CollurgyUI {
                                 ui.close_menu();
                             }
                         }
+                        if ui.button("Save/JSON").clicked() {
+                            self.output = Output::JSON;
+                            ui.close_menu();
+                        }
                         if ui.button("Save/TOML").clicked() {
                             self.output = Output::TOML;
                             ui.close_menu();
@@ -363,6 +373,7 @@ impl App for CollurgyUI {
                                 }
                             }
                             Output::TOML => dialog = dialog.set_file_name("collurgy.toml"),
+                            Output::JSON => dialog = dialog.set_file_name("collurgy.json"),
                         }
                         // on Wayland this has like a 75% chance of making egui go poof
                         if let Some(file) = dialog.save_file() {
@@ -382,7 +393,19 @@ impl App for CollurgyUI {
                                     }
                                 }
                             }
-                            // even tx/rx crashes if this is toplevel...
+                            ui.close_menu();
+                        }
+                        if ui.button("JSON").clicked() {
+                            let dialog = FileDialog::new()
+                                .set_file_name("collurgy.toml")
+                                .add_filter("collurgy toml", &["toml"]);
+                            if let Some(path) = dialog.pick_file() {
+                                if let Ok(s) = read_to_string(path) {
+                                    if let Ok(collurgy) = serde_json::from_str::<Collurgy>(&s) {
+                                        self.data = collurgy
+                                    }
+                                }
+                            }
                             ui.close_menu();
                         }
                     });

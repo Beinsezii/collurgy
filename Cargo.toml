@@ -11,6 +11,7 @@ colcon = "0.2"
 eframe = {version = "0.23", default_features=false, features=["accesskit", "default_fonts", "x11", "wgpu"]}
 rfd = "0.12"
 serde = "1"
+serde_json = "1"
 toml = "0.8"
 
 [features]
