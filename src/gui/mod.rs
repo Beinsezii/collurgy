@@ -380,35 +380,16 @@ impl App for CollurgyUI {
                             let _ = fs::write(file, self.output());
                         }
                     }
-                    ui.menu_button("Load", |ui| {
-                        if ui.button("TOML").clicked() {
-                            // dood...
-                            let dialog = FileDialog::new()
-                                .set_file_name("collurgy.toml")
-                                .add_filter("collurgy toml", &["toml"]);
-                            if let Some(path) = dialog.pick_file() {
-                                if let Ok(s) = read_to_string(path) {
-                                    if let Ok(collurgy) = toml::from_str::<Collurgy>(&s) {
-                                        self.data = collurgy
-                                    }
-                                }
+                    if ui.button("Load").clicked() {
+                        let dialog = FileDialog::new()
+                            .set_file_name("collurgy.toml")
+                            .add_filter("Serialized Collurgy", &["toml", "json"]);
+                        if let Some(path) = dialog.pick_file() {
+                            if let Ok(s) = read_to_string(path) {
+                                self.apply_serial(&s)
                             }
-                            ui.close_menu();
                         }
-                        if ui.button("JSON").clicked() {
-                            let dialog = FileDialog::new()
-                                .set_file_name("collurgy.toml")
-                                .add_filter("collurgy toml", &["toml"]);
-                            if let Some(path) = dialog.pick_file() {
-                                if let Ok(s) = read_to_string(path) {
-                                    if let Ok(collurgy) = serde_json::from_str::<Collurgy>(&s) {
-                                        self.data = collurgy
-                                    }
-                                }
-                            }
-                            ui.close_menu();
-                        }
-                    });
+                    }
                     // }}}
                 });
                 // sneaky immutable textedit hack?
