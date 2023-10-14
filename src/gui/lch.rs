@@ -1,6 +1,6 @@
 use colcon::{convert_space, Space};
 use eframe::{
-    egui::{self, RichText, Sense, TextureOptions, Widget},
+    egui::{self, Label, RichText, Sense, TextureOptions, Widget},
     epaint::{Color32, ColorImage, Rect, Rgba, Stroke},
 };
 
@@ -36,14 +36,17 @@ impl<'a> Widget for LCH<'a> {
             let mut fg = *self.value;
             convert_space(Space::LCH, Space::LRGB, &mut fg);
             let fg: Color32 = Rgba::from_rgb(fg[0], fg[1], fg[2]).into();
-            ui.label(
-                RichText::new(format!(
-                    "{} {:.0} {:.0} {:.0}",
-                    self.text, self.value[0], self.value[1], self.value[2]
-                ))
-                .size(self.font_size)
-                .background_color(self.fill)
-                .color(fg),
+            ui.add(
+                Label::new(
+                    RichText::new(format!(
+                        "{} {:.0} {:.0} {:.0}",
+                        self.text, self.value[0], self.value[1], self.value[2]
+                    ))
+                    .size(self.font_size)
+                    .background_color(self.fill)
+                    .color(fg),
+                )
+                .wrap(false),
             );
             let texres = ui
                 .horizontal(|ui| {

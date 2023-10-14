@@ -9,7 +9,10 @@ use std::{
 use colcon::srgb_to_irgb;
 
 use eframe::{
-    egui::{self, CentralPanel, Context, Frame, Grid, Label, RichText, Sense, SidePanel, Widget},
+    egui::{
+        self, CentralPanel, Context, DragValue, Frame, Grid, Label, RichText, ScrollArea, Sense,
+        SidePanel, Widget,
+    },
     emath::Align2,
     epaint::{Color32, Rounding, Stroke},
     App, CreationContext,
@@ -188,6 +191,7 @@ impl Display for Output {
 pub struct CollurgyUI {
     data: Collurgy,
     exporters: HashMap<String, Exporter>,
+    extras: Option<HashMap<String, usize>>,
     output: Output,
     scale: f32,
 }
@@ -203,12 +207,13 @@ impl CollurgyUI {
             data,
             output: Output::TOML,
             exporters,
+            extras: None,
             scale: scale_factor(),
         }
     }
     fn output(&self) -> String {
         match &self.output {
-            Output::Exporter(s) => self.exporters[s].export(&self.data),
+            Output::Exporter(s) => self.exporters[s].export(&self.data, &self.extras),
             Output::JSON => serde_json::to_string(&self.data).unwrap(),
             Output::TOML => toml::to_string(&self.data).unwrap(),
         }
@@ -219,6 +224,13 @@ impl CollurgyUI {
         } else if let Ok(collurgy) = serde_json::from_str(data) {
             self.data = collurgy
         }
+    }
+    fn set(&mut self, output: Output) {
+        self.extras = match &output {
+            Output::Exporter(e) => self.exporters[e].extras.clone(),
+            _ => None,
+        };
+        self.output = output;
     }
     // }}}
 }
@@ -243,91 +255,6 @@ impl App for CollurgyUI {
             let c = srgb_to_irgb(c);
             Color32::from_rgb(c[0], c[1], c[2])
         });
-        CentralPanel::default()
-            .frame(Frame::none().fill(colors[8]))
-            .show(&ctx, |ui| {
-                // {{{
-                ui.horizontal(|ui| {
-                    ui.add_sized(
-                        (150.0, 20.0),
-                        ColorScale::new(
-                            &mut self.scale,
-                            0.5..=3.0,
-                            0.1,
-                            format!("UI SCALE {:.1}", s),
-                            colors[self.data.accent],
-                            colors[0],
-                            15.0,
-                        ),
-                    );
-                    Frame::none().fill(colors[0]).show(ui, |ui| {
-                        ui.add_sized(
-                            (300.0, 20.0),
-                            Label::new(
-                                RichText::new("Collurgy Theme Creator 0.1.0")
-                                    .size(15.0)
-                                    .color(colors[self.data.accent]),
-                            ),
-                        )
-                    });
-                });
-                ui.spacing_mut().item_spacing = (4.0 * s, 4.0 * s).into();
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing = (4.0 * s, 1.0 * s).into();
-                    ui.add(LCH::new(
-                        &mut self.data.foreground,
-                        "Foreground",
-                        colors[0],
-                        14.0 * s,
-                        s * 2.0,
-                    ));
-                    ui.add(LCH::new(
-                        &mut self.data.background,
-                        "Background",
-                        colors[15],
-                        14.0 * s,
-                        s * 2.0,
-                    ));
-                    ui.add(LCH::new(
-                        &mut self.data.spectrum,
-                        "Spectrum",
-                        colors[0],
-                        14.0 * s,
-                        s * 2.0,
-                    ));
-                    ui.add(LCH::new(
-                        &mut self.data.spectrum_bright,
-                        "Spectrum Bright",
-                        colors[0],
-                        14.0 * s,
-                        s * 2.0,
-                    ));
-                });
-                Grid::new("color_buttons")
-                    .spacing((4.0 * s, 4.0 * s))
-                    .show(ui, |ui| {
-                        for n in 0..16 {
-                            if ui
-                                .add_sized(
-                                    (75.0 * s, 35.0 * s),
-                                    ColorButton::new(
-                                        format!("Color {}", n),
-                                        colors[n],
-                                        if n == 0 { colors[15] } else { colors[0] },
-                                        15.0 * s,
-                                    ),
-                                )
-                                .clicked()
-                            {
-                                self.data.accent = n
-                            };
-                            if n == 7 {
-                                ui.end_row()
-                            }
-                        }
-                    })
-                // }}}
-            });
         SidePanel::right("ExportPan")
             .min_width(200.0)
             .show(ctx, |ui| {
@@ -338,16 +265,16 @@ impl App for CollurgyUI {
                         vals.sort();
                         for exp in vals.into_iter() {
                             if ui.button(format!("Export/{}", &exp)).clicked() {
-                                self.output = Output::Exporter(exp);
+                                self.set(Output::Exporter(exp));
                                 ui.close_menu();
                             }
                         }
                         if ui.button("Save/JSON").clicked() {
-                            self.output = Output::JSON;
+                            self.set(Output::JSON);
                             ui.close_menu();
                         }
                         if ui.button("Save/TOML").clicked() {
-                            self.output = Output::TOML;
+                            self.set(Output::TOML);
                             ui.close_menu();
                         }
                     });
@@ -392,8 +319,119 @@ impl App for CollurgyUI {
                     }
                     // }}}
                 });
-                // sneaky immutable textedit hack?
-                ui.code_editor(&mut self.output().as_str());
+                ScrollArea::both().show(ui, |ui| {
+                    if let Some(extras) = self.extras.as_mut() {
+                        let mut sorted: Vec<(&String, &mut usize)> = extras.iter_mut().collect();
+                        sorted.sort_unstable_by(|a, b| a.0.cmp(b.0));
+                        for (id, n) in sorted.into_iter() {
+                            if *n < 16 {
+                                ui.horizontal(|ui| {
+                                    ui.label(
+                                        RichText::new(id)
+                                            .background_color(if *n != 0 {
+                                                colors[0]
+                                            } else {
+                                                colors[15]
+                                            })
+                                            .color(colors[*n]),
+                                    );
+                                    ui.add(DragValue::new(n).clamp_range(0..=15));
+                                });
+                            }
+                        }
+                    }
+                    // sneaky immutable textedit hack?
+                    // ui.code_editor(&mut self.output().as_str());
+                    // textedit always wraps???
+                    ui.add(Label::new(self.output()).wrap(false))
+                });
+            });
+        CentralPanel::default()
+            .frame(Frame::none().fill(colors[8]))
+            .show(&ctx, |ui| {
+                // {{{
+                ui.horizontal(|ui| {
+                    ui.add_sized(
+                        (150.0, 20.0),
+                        ColorScale::new(
+                            &mut self.scale,
+                            0.5..=3.0,
+                            0.1,
+                            format!("UI SCALE {:.1}", s),
+                            colors[self.data.accent],
+                            colors[0],
+                            15.0,
+                        ),
+                    );
+                    Frame::none().fill(colors[0]).show(ui, |ui| {
+                        ui.add_sized(
+                            (300.0, 20.0),
+                            Label::new(
+                                RichText::new("Collurgy Theme Creator 0.1.0")
+                                    .size(15.0)
+                                    .color(colors[self.data.accent]),
+                            ),
+                        )
+                    });
+                });
+                ScrollArea::both().show(ui, |ui| {
+                    ui.spacing_mut().item_spacing = (4.0 * s, 4.0 * s).into();
+                    ui.horizontal(|ui| {
+                        ui.spacing_mut().item_spacing = (4.0 * s, 1.0 * s).into();
+                        ui.add(LCH::new(
+                            &mut self.data.foreground,
+                            "Foreground",
+                            colors[0],
+                            14.0 * s,
+                            s * 2.0,
+                        ));
+                        ui.add(LCH::new(
+                            &mut self.data.background,
+                            "Background",
+                            colors[15],
+                            14.0 * s,
+                            s * 2.0,
+                        ));
+                        ui.add(LCH::new(
+                            &mut self.data.spectrum,
+                            "Spectrum",
+                            colors[0],
+                            14.0 * s,
+                            s * 2.0,
+                        ));
+                        ui.add(LCH::new(
+                            &mut self.data.spectrum_bright,
+                            "Spectrum Bright",
+                            colors[0],
+                            14.0 * s,
+                            s * 2.0,
+                        ));
+                    });
+                    Grid::new("color_buttons")
+                        .spacing((4.0 * s, 4.0 * s))
+                        .show(ui, |ui| {
+                            for n in 0..16 {
+                                if ui
+                                    .add_sized(
+                                        (75.0 * s, 35.0 * s),
+                                        ColorButton::new(
+                                            format!("Color {}", n),
+                                            colors[n],
+                                            if n == 0 { colors[15] } else { colors[0] },
+                                            15.0 * s,
+                                        ),
+                                    )
+                                    .clicked()
+                                {
+                                    self.data.accent = n
+                                };
+                                if n == 7 {
+                                    ui.end_row()
+                                }
+                            }
+                        })
+                });
+                // }}}
             });
     }
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {

@@ -98,10 +98,11 @@ pub struct Exporter {
     name: String,
     formatter: String,
     path: Option<PathBuf>,
+    extras: Option<HashMap<String, usize>>,
 }
 
 impl Exporter {
-    fn export(&self, data: &Collurgy) -> String {
+    fn export(&self, data: &Collurgy, extras: &Option<HashMap<String, usize>>) -> String {
         let frgb = data.compute();
         let irgb = frgb.map(|pixel| srgb_to_irgb(pixel));
         let hex = irgb.map(|pixel| irgb_to_hex(pixel));
@@ -138,6 +139,22 @@ impl Exporter {
             ("{ACCHEX}".to_string(), hex[data.accent].clone()),
         ]);
 
+        if let Some(ext) = extras.as_ref().or(self.extras.as_ref()) {
+            for (id, n) in ext {
+                if let (Some(iv), Some(fv), Some(hv)) = (irgb.get(*n), frgb.get(*n), hex.get(*n)) {
+                    swaps.append(&mut vec![
+                        (format!("{{{}R}}", id), iv[0].to_string()),
+                        (format!("{{{}G}}", id), iv[1].to_string()),
+                        (format!("{{{}B}}", id), iv[2].to_string()),
+                        (format!("{{{}FR}}", id), fv[0].to_string()),
+                        (format!("{{{}FG}}", id), fv[1].to_string()),
+                        (format!("{{{}FB}}", id), fv[2].to_string()),
+                        (format!("{{{}HEX}}", id), hv.to_string()),
+                    ]);
+                }
+            }
+        }
+
         for (a, b) in swaps {
             result = result.replace(&a, &b)
         }
@@ -148,15 +165,17 @@ impl Exporter {
 fn collect_exporters(paths: Vec<PathBuf>) -> HashMap<String, Exporter> {
     let mut result = HashMap::new();
     #[cfg(feature = "builtins")]
-    let builtins = vec![
+    for builtin in [
         include_str!("../builtins/dunst.toml"),
         include_str!("../builtins/dwarf.toml"),
         include_str!("../builtins/i3.toml"),
         include_str!("../builtins/ppm.toml"),
+        include_str!("../builtins/vim.toml"),
         include_str!("../builtins/xresources.toml"),
-    ];
-    #[cfg(not(feature = "builtins"))]
-    let builtins = Vec::new();
+    ] {
+        let exporter = toml::from_str::<Exporter>(builtin).unwrap();
+        result.insert(exporter.name.clone(), exporter);
+    }
     let mut found = Vec::new();
     for p in paths {
         if p.is_dir() {
@@ -175,8 +194,8 @@ fn collect_exporters(paths: Vec<PathBuf>) -> HashMap<String, Exporter> {
             }
         }
     }
-    for s in builtins.into_iter().chain(found.iter().map(|s| s.as_str())) {
-        if let Ok(exporter) = toml::from_str::<Exporter>(s) {
+    for s in found.iter() {
+        if let Ok(exporter) = toml::from_str::<Exporter>(s.as_str()) {
             result.insert(exporter.name.clone(), exporter);
         }
     }

@@ -1,0 +1,100 @@
+name = "Vim"
+path = "colors.vim"
+
+extras = {CONSTANT = 11, IDENTIFIER = 14, STATEMENT = 12, PREPROC = 10, TYPE = 13, SPECIAL = 6, UNDERLINED = 3, ERROR = 9, TODO = 1}
+
+formatter = """
+hi clear
+if exists(\"syntax_on\")
+  syn reset
+endif
+
+let g:colors_name=\"Lunarized\"
+
+\" Vars for easy setting
+let s:fg = '{HEX15}'
+let s:bg = '{HEX0}'
+let s:fga = '{HEX7}'
+let s:bga = '{HEX8}'
+let s:ac = '{ACCHEX}'
+let s:constant = '{CONSTANTHEX}'
+let s:identifier = '{IDENTIFIERHEX}'
+let s:statement = '{STATEMENTHEX}'
+let s:preproc = '{PREPROCHEX}'
+let s:type = '{TYPEHEX}'
+let s:special = '{SPECIALHEX}'
+let s:underlined = '{UNDERLINEDHEX}'
+let s:error = '{ERRORHEX}'
+let s:todo = '{TODOHEX}'
+
+\" Highlight groups
+\" ## Basic Built-Ins ##
+exe 'hi Normal guifg='.s:fg.' guibg='.s:bg
+exe 'hi NormalFloat guifg='.s:fg.' guibg='.s:bga
+exe 'hi NormalNC guifg='.s:fga
+
+exe 'hi Cursor guifg='.s:bg.' guibg='.s:ac
+hi! link LineNr NormalNC
+exe 'hi CursorLineNr guifg='.s:ac
+hi! link NonText LineNr
+
+exe 'hi Visual guifg='.s:bg.' guibg='.s:fga
+exe 'hi Search guifg='.s:bg.' guibg='.s:identifier
+exe 'hi IncSearch guifg='.s:bg.' guibg='.s:type.' gui=NONE'
+
+exe 'hi Folded guifg='.s:bga.' guibg='.s:fga
+
+exe 'hi SignColumn guibg='.s:bga
+
+exe 'hi Comment guifg='.s:fga
+
+\" ## Syntax ##
+exe 'hi Constant guifg='.s:constant
+exe 'hi Identifier guifg='.s:identifier
+exe 'hi Statement guifg='.s:statement
+exe 'hi PreProc guifg='.s:preproc
+exe 'hi Type guifg='.s:type
+exe 'hi Special guifg='.s:special.' gui=bold'
+exe 'hi Underlined guifg='.s:underlined.' guisp='.s:underlined
+exe 'hi Error guifg='.s:error.' guibg=NONE gui=bold'
+exe 'hi Todo guifg='.s:todo.' guibg=NONE gui=bold'
+
+\" ## Misc Built-in ##
+\" ## Messages ##
+exe 'hi Question guifg='.s:statement' guibg=NONE'
+hi! link ErrorMsg Error
+hi! link WarningMsg Special
+
+hi! link Title Type
+hi! link MoreMsg Identifier
+
+\" ## Popup/completion menu ##
+hi! link Pmenu NormalFloat
+hi! link PmenuSel Cursor
+hi! link PmenuSbar Pmenu
+exe 'hi PmenuThumb guibg='.s:fga
+
+\" ## Statusbar ##
+exe 'hi User1 guifg='.s:bg.' guibg='.s:constant
+exe 'hi User2 guifg='.s:bg.' guibg='.s:identifier
+exe 'hi User3 guifg='.s:bg.' guibg='.s:statement
+exe 'hi User4 guifg='.s:bg.' guibg='.s:preproc
+exe 'hi User5 guifg='.s:bg.' guibg='.s:type
+exe 'hi User6 guifg='.s:bg.' guibg='.s:special
+exe 'hi User7 guifg='.s:bg.' guibg='.s:error
+exe 'hi User8 guifg='.s:bg.' guibg='.s:underlined
+exe 'hi User9 guifg='.s:bg.' guibg='.s:todo
+
+
+\" ## Vim Rainbow ##
+let g:rainbow_conf = { 'guifgs': [''.s:constant, ''.s:identifier, ''.s:statement, ''.s:preproc, ''.s:type], }
+
+\" ## Nvim-ts-rainbow ##
+exe 'hi rainbowcol1 guifg='.s:constant
+exe 'hi rainbowcol2 guifg='.s:identifier
+exe 'hi rainbowcol3 guifg='.s:statement
+exe 'hi rainbowcol4 guifg='.s:preproc
+exe 'hi rainbowcol5 guifg='.s:type
+exe 'hi rainbowcol6 guifg='.s:special
+exe 'hi rainbowcol7 guifg='.s:error
+"""
