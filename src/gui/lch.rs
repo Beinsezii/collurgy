@@ -1,4 +1,4 @@
-use colcon::{convert_space, Space};
+use colcon::{convert_space, Space, hk_comp_2023};
 use eframe::{
     egui::{self, Label, RichText, Sense, TextureOptions, Widget},
     epaint::{Color32, ColorImage, Rect, Rgba, Stroke},
@@ -34,6 +34,7 @@ impl<'a> Widget for LCH<'a> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         ui.vertical(|ui| {
             let mut fg = *self.value;
+            hk_comp_2023(&mut fg);
             convert_space(Space::LCH, Space::LRGB, &mut fg);
             let fg: Color32 = Rgba::from_rgb(fg[0], fg[1], fg[2]).into();
             ui.add(
@@ -85,6 +86,7 @@ impl<'a> Widget for LCH<'a> {
                                     .map(|h| {
                                         let mut p =
                                             [self.value[0], (100 - c) as f32, h as f32 * 5.0];
+                                        hk_comp_2023(&mut p);
                                         convert_space(Space::LCH, Space::LRGB, &mut p);
                                         Rgba::from_rgb(p[0], p[1], p[2]).into()
                                     })
@@ -135,6 +137,7 @@ impl<'a> Widget for LCH<'a> {
                         pixels: (0..=100)
                             .map(|n| {
                                 let mut p = [(100 - n) as f32, self.value[1], self.value[2]];
+                                hk_comp_2023(&mut p);
                                 convert_space(Space::LCH, Space::LRGB, &mut p);
                                 Rgba::from_rgb(p[0], p[1], p[2]).into()
                             })

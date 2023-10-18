@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ffi::OsStr, fs::read_to_string, path::PathBuf};
 
-use colcon::{convert_space, irgb_to_hex, srgb_to_irgb, Space};
+use colcon::{convert_space, irgb_to_hex, srgb_to_irgb, Space, hk_comp_2023};
 use serde::{Deserialize, Serialize};
 
 mod gui;
@@ -87,7 +87,10 @@ impl Collurgy {
 
         result
             .iter_mut()
-            .for_each(|col| convert_space(Space::LCH, Space::SRGB, col));
+            .for_each(|col| {
+                hk_comp_2023(col);
+                convert_space(Space::LCH, Space::SRGB, col);
+            });
 
         result
     }
