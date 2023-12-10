@@ -16,7 +16,7 @@ client.placeholder      $bg2   $bg2       $fg  $bg       $bg2
 client.background              $bg
 
 bar {
-    colors{
+    colors {
         background $bg
         statusline $fg
         separator $acc
