@@ -172,6 +172,7 @@ fn collect_exporters(paths: Vec<PathBuf>) -> HashMap<String, Exporter> {
         include_str!("../builtins/dunst.toml"),
         include_str!("../builtins/dwarf.toml"),
         include_str!("../builtins/i3.toml"),
+        include_str!("../builtins/kitty.toml"),
         include_str!("../builtins/ppm.toml"),
         include_str!("../builtins/vim.toml"),
         include_str!("../builtins/xresources.toml"),

@@ -1,0 +1,24 @@
+name = "Kitty"
+formatter = """
+background     {HEX0}
+foreground     {HEX15}
+highlightColor {HEX7}
+cursor         {ACCHEX}
+
+color0         {HEX0}
+color1         {HEX1}
+color2         {HEX2}
+color3         {HEX3}
+color4         {HEX4}
+color5         {HEX5}
+color6         {HEX6}
+color7         {HEX7}
+color8         {HEX8}
+color9         {HEX9}
+color10        {HEX10}
+color11        {HEX11}
+color12        {HEX12}
+color13        {HEX13}
+color14        {HEX14}
+color15        {HEX15}"""
+path = "~/.config/kitty/kitty.conf"
