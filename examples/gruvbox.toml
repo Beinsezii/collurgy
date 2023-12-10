@@ -1,0 +1,5 @@
+foreground = [85.0, 20.0, 90.0]
+background = [15.0, 0.0, 0.0]
+spectrum = [45.0, 70.0, 0.0]
+spectrum_bright = [65.0, 60.0, 0.0]
+accent = 11

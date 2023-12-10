@@ -25,8 +25,8 @@ impl Default for Collurgy {
         Self {
             foreground: [100.0, 0.0, 0.0],
             background: [0.0; 3],
-            spectrum: [35.0, 35.0, 0.0],
-            spectrum_bright: [65.0, 65.0, 0.0],
+            spectrum: [50.0, 50.0, 30.0],
+            spectrum_bright: [70.0, 50.0, 30.0],
             accent: 11, // Bright Yellow
         }
     }
