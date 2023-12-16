@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-colcon = "0.3"
+colcon = "0.4"
 # disable wayland
 eframe = {version = "0.24", default_features=false, features=["accesskit", "default_fonts", "x11", "wgpu"]}
 rfd = "0.12"
