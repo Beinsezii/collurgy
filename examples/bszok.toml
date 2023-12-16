@@ -1,0 +1,6 @@
+model = "OKLCH"
+foreground = [85.0, 25.0, 80.0]
+background = [5.0, 0.0, 80.0]
+spectrum = [65.0, 50.0, 20.0]
+spectrum_bright = [70.0, 45.0, 355.0]
+accent = 3

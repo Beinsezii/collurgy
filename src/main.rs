@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 mod gui;
 use gui::CollurgyUI;
 
-#[derive(Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]
 pub enum Model {
     CIELCH,
     CIELCH2023,
@@ -16,14 +16,10 @@ pub enum Model {
 impl Model {
     fn apply(&self, colors: &mut [[f32; 3]], to: colcon::Space) {
         let from = match self {
-            Model::CIELCH | Model::CIELCH2023 => Space::LCH,
-            Model::OKLCH => Space::OKLCH,
+            Model::CIELCH => Space::LCH,
+            Model::CIELCH2023 => {colors.iter_mut().for_each(|col| hk_comp_2023(col)); Space::LCH},
+            Model::OKLCH => {colors.iter_mut().for_each(|col| {col[0] /= 100.0; col[1] /= 400.0;}); Space::OKLCH},
         };
-        if self == &Model::CIELCH2023 {
-           colors.iter_mut().for_each(|col| {
-                    hk_comp_2023(col);
-                });
-        }
         convert_space_chunked(from, to, colors);
     }
 }

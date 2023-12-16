@@ -365,6 +365,13 @@ impl App for CollurgyUI {
                             15.0,
                         ),
                     );
+                    ui.menu_button(format!("Model: {:?}", self.data.model), |ui| {
+                        for model in [Model::CIELCH, Model::CIELCH2023, Model::OKLCH] {
+                            if ui.button(format!("{:?}", model)).clicked() {
+                                self.data.model = model
+                            }
+                        }
+                    });
                     Frame::none().fill(colors[0]).show(ui, |ui| {
                         ui.add_sized(
                             (300.0, 20.0),
