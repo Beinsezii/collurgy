@@ -1,6 +1,6 @@
-model = "CIELCH2023"
+model = "HSV"
 foreground = [100.0, 0.0, 0.0]
 background = [0.0, 0.0, 0.0]
-spectrum = [45.0, 70.0, 30.0]
-spectrum_bright = [65.0, 80.0, 30.0]
+spectrum = [80.0, 100.0, 0.0]
+spectrum_bright = [100.0, 70.0, 0.0]
 accent = 15

@@ -8,6 +8,7 @@ use gui::CollurgyUI;
 
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]
 pub enum Model {
+    HSV,
     CIELCH,
     CIELCH2023,
     OKLCH,
@@ -16,6 +17,7 @@ pub enum Model {
 impl Model {
     fn apply(&self, colors: &mut [[f32; 3]], to: colcon::Space) {
         let from = match self {
+            Model::HSV => {colors.iter_mut().for_each(|col| *col = [col[2] / 360.0, col[1] / 100.0, col[0] / 100.0]); Space::HSV},
             Model::CIELCH => Space::LCH,
             Model::CIELCH2023 => {colors.iter_mut().for_each(|col| hk_comp_2023(col)); Space::LCH},
             Model::OKLCH => {colors.iter_mut().for_each(|col| {col[0] /= 100.0; col[1] /= 400.0;}); Space::OKLCH},
