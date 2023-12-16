@@ -14,7 +14,7 @@ pub enum Model {
 }
 
 impl Model {
-    fn apply(&self, colors: &mut [[f32; 3]]) {
+    fn apply(&self, colors: &mut [[f32; 3]], to: colcon::Space) {
         let from = match self {
             Model::CIELCH | Model::CIELCH2023 => Space::LCH,
             Model::OKLCH => Space::OKLCH,
@@ -24,7 +24,7 @@ impl Model {
                     hk_comp_2023(col);
                 });
         }
-        convert_space_chunked(from, Space::SRGB, colors);
+        convert_space_chunked(from, to, colors);
     }
 }
 
@@ -109,7 +109,7 @@ impl Collurgy {
         result[12] = brots.next().unwrap(); // Blue
         result[13] = brots.next().unwrap(); // Magenta
 
-        self.model.apply(&mut result);
+        self.model.apply(&mut result, Space::SRGB);
 
         result
     }

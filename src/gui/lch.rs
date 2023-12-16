@@ -3,6 +3,7 @@ use eframe::{
     epaint::{Color32, ColorImage, Rect, Rgba, Stroke},
 };
 use super::Model;
+use colcon::Space;
 
 pub struct LCH<'a> {
     value: &'a mut [f32; 3],
@@ -37,7 +38,7 @@ impl<'a> Widget for LCH<'a> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         ui.vertical(|ui| {
             let mut fg = [*self.value];
-            self.model.apply(&mut fg);
+            self.model.apply(&mut fg, Space::LRGB);
             let fg = fg[0];
             let fg: Color32 = Rgba::from_rgb(fg[0], fg[1], fg[2]).into();
             ui.add(
@@ -85,7 +86,7 @@ impl<'a> Widget for LCH<'a> {
                     let mut pixels: Vec<[f32; 3]> = (0..=100).map(|c| {
                         (0..72).map(|h| [self.value[0], (100 - c) as f32, h as f32 * 5.0] ).collect::<Vec<[f32; 3]>>()
                     }).reduce(|mut acc, e| {acc.extend_from_slice(&e); acc}).unwrap();
-                    self.model.apply(&mut pixels);
+                    self.model.apply(&mut pixels, Space::LRGB);
 
                     let chimg = ColorImage {
                         size: [72, 101],
@@ -126,7 +127,7 @@ impl<'a> Widget for LCH<'a> {
                     let lpaint = ui.painter_at(lrect);
 
                     let mut pixels: Vec<[f32; 3]> = (0..=100).map(|l| [(100 - l) as f32, self.value[1], self.value[2]]).collect::<Vec<[f32; 3]>>();
-                    self.model.apply(&mut pixels);
+                    self.model.apply(&mut pixels, Space::LRGB);
 
                     let limg = ColorImage {
                         size: [1, 101],
