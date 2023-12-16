@@ -1,8 +1,8 @@
-use colcon::{convert_space, Space, hk_comp_2023};
 use eframe::{
     egui::{self, Label, RichText, Sense, TextureOptions, Widget},
     epaint::{Color32, ColorImage, Rect, Rgba, Stroke},
 };
+use super::Model;
 
 pub struct LCH<'a> {
     value: &'a mut [f32; 3],
@@ -10,6 +10,7 @@ pub struct LCH<'a> {
     fill: Color32,
     font_size: f32,
     scale: f32,
+    model: Model,
 }
 
 impl<'a> LCH<'a> {
@@ -19,6 +20,7 @@ impl<'a> LCH<'a> {
         fill: Color32,
         font_size: f32,
         scale: f32,
+        model: Model,
     ) -> Self {
         Self {
             value,
@@ -26,6 +28,7 @@ impl<'a> LCH<'a> {
             fill,
             font_size,
             scale,
+            model,
         }
     }
 }
@@ -33,9 +36,9 @@ impl<'a> LCH<'a> {
 impl<'a> Widget for LCH<'a> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         ui.vertical(|ui| {
-            let mut fg = *self.value;
-            hk_comp_2023(&mut fg);
-            convert_space(Space::LCH, Space::LRGB, &mut fg);
+            let mut fg = [*self.value];
+            self.model.apply(&mut fg);
+            let fg = fg[0];
             let fg: Color32 = Rgba::from_rgb(fg[0], fg[1], fg[2]).into();
             ui.add(
                 Label::new(
@@ -78,25 +81,15 @@ impl<'a> Widget for LCH<'a> {
                     }
                     // CH Square
                     let chpaint = ui.painter_at(chrect);
+
+                    let mut pixels: Vec<[f32; 3]> = (0..=100).map(|c| {
+                        (0..72).map(|h| [self.value[0], (100 - c) as f32, h as f32 * 5.0] ).collect::<Vec<[f32; 3]>>()
+                    }).reduce(|mut acc, e| {acc.extend_from_slice(&e); acc}).unwrap();
+                    self.model.apply(&mut pixels);
+
                     let chimg = ColorImage {
                         size: [72, 101],
-                        pixels: (0..=100)
-                            .map(|c| {
-                                (0..72)
-                                    .map(|h| {
-                                        let mut p =
-                                            [self.value[0], (100 - c) as f32, h as f32 * 5.0];
-                                        hk_comp_2023(&mut p);
-                                        convert_space(Space::LCH, Space::LRGB, &mut p);
-                                        Rgba::from_rgb(p[0], p[1], p[2]).into()
-                                    })
-                                    .collect::<Vec<Color32>>()
-                            })
-                            .reduce(|mut acc, mut e| {
-                                acc.append(&mut e);
-                                acc
-                            })
-                            .unwrap(),
+                        pixels: pixels.into_iter().map(|p| Rgba::from_rgb(p[0], p[1], p[2]).into()).collect::<Vec<Color32>>()
                     };
                     let chtexture = ui.ctx().load_texture(
                         format!("{} CH", self.text),
@@ -132,16 +125,12 @@ impl<'a> Widget for LCH<'a> {
                     // L slider
                     let lpaint = ui.painter_at(lrect);
 
+                    let mut pixels: Vec<[f32; 3]> = (0..=100).map(|l| [(100 - l) as f32, self.value[1], self.value[2]]).collect::<Vec<[f32; 3]>>();
+                    self.model.apply(&mut pixels);
+
                     let limg = ColorImage {
                         size: [1, 101],
-                        pixels: (0..=100)
-                            .map(|n| {
-                                let mut p = [(100 - n) as f32, self.value[1], self.value[2]];
-                                hk_comp_2023(&mut p);
-                                convert_space(Space::LCH, Space::LRGB, &mut p);
-                                Rgba::from_rgb(p[0], p[1], p[2]).into()
-                            })
-                            .collect::<Vec<Color32>>(),
+                        pixels: pixels.into_iter().map(|p| Rgba::from_rgb(p[0], p[1], p[2]).into()).collect::<Vec<Color32>>(),
                     };
                     let ltexture = ui.ctx().load_texture(
                         format!("{} L", self.text),

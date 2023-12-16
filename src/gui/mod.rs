@@ -22,7 +22,7 @@ mod lch;
 use lch::LCH;
 use rfd::FileDialog;
 
-use super::{Collurgy, Exporter};
+use super::{Collurgy, Exporter, Model};
 
 const LI: &'static str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
@@ -386,6 +386,7 @@ impl App for CollurgyUI {
                             colors[0],
                             14.0 * s,
                             s * 2.0,
+                            self.data.model,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.background,
@@ -393,6 +394,7 @@ impl App for CollurgyUI {
                             colors[15],
                             14.0 * s,
                             s * 2.0,
+                            self.data.model,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.spectrum,
@@ -400,6 +402,7 @@ impl App for CollurgyUI {
                             colors[0],
                             14.0 * s,
                             s * 2.0,
+                            self.data.model,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.spectrum_bright,
@@ -407,6 +410,7 @@ impl App for CollurgyUI {
                             colors[0],
                             14.0 * s,
                             s * 2.0,
+                            self.data.model,
                         ));
                     });
                     Grid::new("color_buttons")

@@ -1,13 +1,36 @@
 use std::{collections::HashMap, ffi::OsStr, fs::read_to_string, path::PathBuf};
 
-use colcon::{convert_space, irgb_to_hex, srgb_to_irgb, Space, hk_comp_2023};
+use colcon::{convert_space_chunked, irgb_to_hex, srgb_to_irgb, Space, hk_comp_2023};
 use serde::{Deserialize, Serialize};
 
 mod gui;
 use gui::CollurgyUI;
 
+#[derive(Serialize, Deserialize, Clone, Copy, PartialEq)]
+pub enum Model {
+    CIELCH,
+    CIELCH2023,
+    OKLCH,
+}
+
+impl Model {
+    fn apply(&self, colors: &mut [[f32; 3]]) {
+        let from = match self {
+            Model::CIELCH | Model::CIELCH2023 => Space::LCH,
+            Model::OKLCH => Space::OKLCH,
+        };
+        if self == &Model::CIELCH2023 {
+           colors.iter_mut().for_each(|col| {
+                    hk_comp_2023(col);
+                });
+        }
+        convert_space_chunked(from, Space::SRGB, colors);
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct Collurgy {
+    model: Model,
     /// LCH
     foreground: [f32; 3],
     /// LCH
@@ -23,6 +46,7 @@ pub struct Collurgy {
 impl Default for Collurgy {
     fn default() -> Self {
         Self {
+            model: Model::CIELCH,
             foreground: [100.0, 0.0, 0.0],
             background: [0.0; 3],
             spectrum: [50.0, 50.0, 30.0],
@@ -85,12 +109,7 @@ impl Collurgy {
         result[12] = brots.next().unwrap(); // Blue
         result[13] = brots.next().unwrap(); // Magenta
 
-        result
-            .iter_mut()
-            .for_each(|col| {
-                hk_comp_2023(col);
-                convert_space(Space::LCH, Space::SRGB, col);
-            });
+        self.model.apply(&mut result);
 
         result
     }
