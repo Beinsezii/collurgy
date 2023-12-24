@@ -366,7 +366,7 @@ impl App for CollurgyUI {
                         ),
                     );
                     ui.menu_button(format!("Model: {:?}", self.data.model), |ui| {
-                        for model in [Model::HSV, Model::CIELCH, Model::CIELCH2023, Model::OKLCH] {
+                        for model in [Model::HSV, Model::CIELCH, Model::CIELCH2023, Model::OKLCH, Model::JZCZHZ] {
                             if ui.button(format!("{:?}", model)).clicked() {
                                 self.data.model = model
                             }

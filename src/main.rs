@@ -12,6 +12,7 @@ pub enum Model {
     CIELCH,
     CIELCH2023,
     OKLCH,
+    JZCZHZ,
 }
 
 impl Model {
@@ -21,6 +22,7 @@ impl Model {
             Model::CIELCH => Space::LCH,
             Model::CIELCH2023 => {colors.iter_mut().for_each(|col| hk_high2023_comp(col)); Space::LCH},
             Model::OKLCH => {colors.iter_mut().for_each(|col| {col[0] /= 100.0; col[1] /= 400.0;}); Space::OKLCH},
+            Model::JZCZHZ => {colors.iter_mut().for_each(|col| {col[0] /= 5650.0; col[1] /= 5650.0;}); Space::JZCZHZ}
         };
         convert_space_chunked(from, to, colors);
     }
