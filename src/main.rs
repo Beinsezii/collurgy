@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ffi::OsStr, fs::read_to_string, path::PathBuf};
 
-use colcon::{convert_space_chunked, irgb_to_hex, srgb_to_irgb, Space, hk_comp_2023};
+use colcon::{convert_space_chunked, irgb_to_hex, srgb_to_irgb, Space, hk_high2023_comp};
 use serde::{Deserialize, Serialize};
 
 mod gui;
@@ -19,7 +19,7 @@ impl Model {
         let from = match self {
             Model::HSV => {colors.iter_mut().for_each(|col| *col = [col[2] / 360.0, col[1] / 100.0, col[0] / 100.0]); Space::HSV},
             Model::CIELCH => Space::LCH,
-            Model::CIELCH2023 => {colors.iter_mut().for_each(|col| hk_comp_2023(col)); Space::LCH},
+            Model::CIELCH2023 => {colors.iter_mut().for_each(|col| hk_high2023_comp(col)); Space::LCH},
             Model::OKLCH => {colors.iter_mut().for_each(|col| {col[0] /= 100.0; col[1] /= 400.0;}); Space::OKLCH},
         };
         convert_space_chunked(from, to, colors);
