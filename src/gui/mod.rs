@@ -348,8 +348,11 @@ impl App for CollurgyUI {
                     ui.add(Label::new(self.output()).wrap(false))
                 });
             });
+        let mut fill = [0.5, 0.0, 0.0];
+        colcon::convert_space(colcon::Space::OKLAB, colcon::Space::SRGB, &mut fill);
+        let fill = egui::Rgba::from_rgb(fill[0], fill[1], fill[2]);
         CentralPanel::default()
-            .frame(Frame::none().fill(colors[8]))
+            .frame(Frame::none().fill(fill.into()))
             .show(&ctx, |ui| {
                 // {{{
                 ui.horizontal(|ui| {
