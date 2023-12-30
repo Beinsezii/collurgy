@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ffi::OsStr, fs::read_to_string, path::PathBuf};
 
-use colcon::{convert_space_chunked, irgb_to_hex, srgb_to_irgb, Space, hk_high2023_comp};
+use colcon::{convert_space_chunked, hk_high2023_comp, irgb_to_hex, srgb_to_irgb, Space};
 use serde::{Deserialize, Serialize};
 
 mod gui;
@@ -18,11 +18,31 @@ pub enum Model {
 impl Model {
     fn apply(&self, colors: &mut [[f32; 3]], to: colcon::Space) {
         let from = match self {
-            Model::HSV => {colors.iter_mut().for_each(|col| *col = [col[2] / 360.0, col[1] / 100.0, col[0] / 100.0]); Space::HSV},
+            Model::HSV => {
+                colors
+                    .iter_mut()
+                    .for_each(|col| *col = [col[2] / 360.0, col[1] / 100.0, col[0] / 100.0]);
+                Space::HSV
+            }
             Model::CIELCH => Space::LCH,
-            Model::CIELCH2023 => {colors.iter_mut().for_each(|col| hk_high2023_comp(col)); Space::LCH},
-            Model::OKLCH => {colors.iter_mut().for_each(|col| {col[0] /= 100.0; col[1] /= 400.0;}); Space::OKLCH},
-            Model::JZCZHZ => {colors.iter_mut().for_each(|col| {col[0] /= 5650.0; col[1] /= 5650.0;}); Space::JZCZHZ}
+            Model::CIELCH2023 => {
+                colors.iter_mut().for_each(|col| hk_high2023_comp(col));
+                Space::LCH
+            }
+            Model::OKLCH => {
+                colors.iter_mut().for_each(|col| {
+                    col[0] /= 100.0;
+                    col[1] /= 400.0;
+                });
+                Space::OKLCH
+            }
+            Model::JZCZHZ => {
+                colors.iter_mut().for_each(|col| {
+                    col[0] /= 5650.0;
+                    col[1] /= 5650.0;
+                });
+                Space::JZCZHZ
+            }
         };
         convert_space_chunked(from, to, colors);
     }

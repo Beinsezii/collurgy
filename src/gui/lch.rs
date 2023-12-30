@@ -1,9 +1,9 @@
+use super::Model;
+use colcon::Space;
 use eframe::{
     egui::{self, Label, RichText, Sense, TextureOptions, Widget},
     epaint::{Color32, ColorImage, Rect, Rgba, Stroke},
 };
-use super::Model;
-use colcon::Space;
 
 pub struct LCH<'a> {
     value: &'a mut [f32; 3],
@@ -83,14 +83,25 @@ impl<'a> Widget for LCH<'a> {
                     // CH Square
                     let chpaint = ui.painter_at(chrect);
 
-                    let mut pixels: Vec<[f32; 3]> = (0..=100).map(|c| {
-                        (0..72).map(|h| [self.value[0], (100 - c) as f32, h as f32 * 5.0] ).collect::<Vec<[f32; 3]>>()
-                    }).reduce(|mut acc, e| {acc.extend_from_slice(&e); acc}).unwrap();
+                    let mut pixels: Vec<[f32; 3]> = (0..=100)
+                        .map(|c| {
+                            (0..72)
+                                .map(|h| [self.value[0], (100 - c) as f32, h as f32 * 5.0])
+                                .collect::<Vec<[f32; 3]>>()
+                        })
+                        .reduce(|mut acc, e| {
+                            acc.extend_from_slice(&e);
+                            acc
+                        })
+                        .unwrap();
                     self.model.apply(&mut pixels, Space::LRGB);
 
                     let chimg = ColorImage {
                         size: [72, 101],
-                        pixels: pixels.into_iter().map(|p| Rgba::from_rgb(p[0], p[1], p[2]).into()).collect::<Vec<Color32>>()
+                        pixels: pixels
+                            .into_iter()
+                            .map(|p| Rgba::from_rgb(p[0], p[1], p[2]).into())
+                            .collect::<Vec<Color32>>(),
                     };
                     let chtexture = ui.ctx().load_texture(
                         format!("{} CH", self.text),
@@ -126,12 +137,17 @@ impl<'a> Widget for LCH<'a> {
                     // L slider
                     let lpaint = ui.painter_at(lrect);
 
-                    let mut pixels: Vec<[f32; 3]> = (0..=100).map(|l| [(100 - l) as f32, self.value[1], self.value[2]]).collect::<Vec<[f32; 3]>>();
+                    let mut pixels: Vec<[f32; 3]> = (0..=100)
+                        .map(|l| [(100 - l) as f32, self.value[1], self.value[2]])
+                        .collect::<Vec<[f32; 3]>>();
                     self.model.apply(&mut pixels, Space::LRGB);
 
                     let limg = ColorImage {
                         size: [1, 101],
-                        pixels: pixels.into_iter().map(|p| Rgba::from_rgb(p[0], p[1], p[2]).into()).collect::<Vec<Color32>>(),
+                        pixels: pixels
+                            .into_iter()
+                            .map(|p| Rgba::from_rgb(p[0], p[1], p[2]).into())
+                            .collect::<Vec<Color32>>(),
                     };
                     let ltexture = ui.ctx().load_texture(
                         format!("{} L", self.text),

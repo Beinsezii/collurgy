@@ -6,12 +6,12 @@ use std::{
     ops::RangeInclusive,
 };
 
-use colcon::srgb_to_irgb;
+use colcon::{srgb_to_irgb, Space};
 
 use eframe::{
     egui::{
-        self, CentralPanel, Context, DragValue, Frame, Grid, Label, RichText, ScrollArea, Sense,
-        SidePanel, Widget,
+        self, CentralPanel, Context, DragValue, Frame, Grid, Label, Rgba, RichText, ScrollArea,
+        Sense, SidePanel, Widget,
     },
     emath::Align2,
     epaint::{Color32, Rounding, Stroke},
@@ -348,11 +348,9 @@ impl App for CollurgyUI {
                     ui.add(Label::new(self.output()).wrap(false))
                 });
             });
-        let mut fill = [0.5, 0.0, 0.0];
-        colcon::convert_space(colcon::Space::OKLAB, colcon::Space::SRGB, &mut fill);
-        let fill = egui::Rgba::from_rgb(fill[0], fill[1], fill[2]);
+        let fill = colcon::str2space("oklab 0.5 0 0", Space::SRGB).unwrap();
         CentralPanel::default()
-            .frame(Frame::none().fill(fill.into()))
+            .frame(Frame::none().fill(Rgba::from_rgb(fill[0], fill[1], fill[2]).into()))
             .show(&ctx, |ui| {
                 // {{{
                 ui.horizontal(|ui| {
@@ -369,7 +367,13 @@ impl App for CollurgyUI {
                         ),
                     );
                     ui.menu_button(format!("Model: {:?}", self.data.model), |ui| {
-                        for model in [Model::HSV, Model::CIELCH, Model::CIELCH2023, Model::OKLCH, Model::JZCZHZ] {
+                        for model in [
+                            Model::HSV,
+                            Model::CIELCH,
+                            Model::CIELCH2023,
+                            Model::OKLCH,
+                            Model::JZCZHZ,
+                        ] {
                             if ui.button(format!("{:?}", model)).clicked() {
                                 self.data.model = model
                             }
