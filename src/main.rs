@@ -24,7 +24,9 @@ impl Model {
         };
         // rescale to match SDR
         if from == Space::HSV {
-            colors.iter_mut().for_each(|p| *p = [p[2] / 360.0, p[1] / 100.0, p[0] / 100.0]);
+            colors
+                .iter_mut()
+                .for_each(|p| *p = [p[2] / 360.0, p[1] / 100.0, p[0] / 100.0]);
         } else {
             colors.iter_mut().for_each(|p| {
                 // 99.9 to compensate downward precision loss
@@ -35,7 +37,9 @@ impl Model {
             if high2023 != 0.0 {
                 colors.iter_mut().for_each(|col| {
                     // seems like this actually kinda works?
-                    col[0] += (from.srgb_quant100()[0] * 0.2 - colcon::hk_high2023(col)) * (col[1] / from.srgb_quant95()[1]) * high2023
+                    col[0] += (from.srgb_quant100()[0] * 0.2 - colcon::hk_high2023(col))
+                        * (col[1] / from.srgb_quant95()[1])
+                        * high2023
                 });
             }
         };
@@ -246,6 +250,14 @@ fn collect_exporters(paths: Vec<PathBuf>) -> HashMap<String, Exporter> {
 }
 
 fn main() {
+    let start = std::env::args()
+        .nth(1)
+        .map(|file| std::fs::read_to_string(file).ok())
+        .flatten()
+        .map(|string| toml::from_str(&string).ok())
+        .flatten()
+        .unwrap_or(Collurgy::default());
+
     eframe::run_native(
         "Collurgy",
         eframe::NativeOptions {
@@ -254,7 +266,7 @@ fn main() {
         Box::new(|cc| {
             Box::new(CollurgyUI::new(
                 cc,
-                Collurgy::default(),
+                start,
                 collect_exporters(vec![PathBuf::from("./exporters/")]),
             ))
         }),
