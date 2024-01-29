@@ -1,6 +1,7 @@
-model = "CIELCH2023"
-foreground = [80.0, 25.0, 90.0]
-background = [0.0, 0.0, 70.0]
-spectrum = [60.0, 50.0, 25.0]
-spectrum_bright = [60.0, 40.0, 0.0]
+model = "JZCZHZ"
+high2023 = 0.0
+foreground = [80.0, 25.0, 80.0]
+background = [0.0, 0.0, 80.0]
+spectrum = [50.0, 55.0, 20.0]
+spectrum_bright = [50.0, 45.0, 355.0]
 accent = 3
