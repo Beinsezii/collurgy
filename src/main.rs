@@ -25,25 +25,21 @@ impl Model {
                 Space::HSV
             }
             Model::CIELCH => Space::LCH,
+            Model::OKLCH => Space::OKLCH,
+            Model::JZCZHZ => Space::JZCZHZ,
             Model::CIELCH2023 => {
                 colors.iter_mut().for_each(|col| hk_high2023_comp(col));
                 Space::LCH
             }
-            Model::OKLCH => {
-                colors.iter_mut().for_each(|col| {
-                    col[0] /= 100.0;
-                    col[1] /= 400.0;
-                });
-                Space::OKLCH
-            }
-            Model::JZCZHZ => {
-                colors.iter_mut().for_each(|col| {
-                    col[0] /= 5650.0;
-                    col[1] /= 5650.0;
-                });
-                Space::JZCZHZ
-            }
         };
+        if Space::UCS_POLAR.contains(&from) {
+            colors.iter_mut().for_each(|p| {
+                // compensate downward precision loss to reach white
+                // on complex spaces like jzazbz
+                p[0] = p[0] / 99.9 * from.srgb_quant100()[0];
+                p[1] = p[1] / 100.0 * from.srgb_quant95()[1];
+            });
+        }
         convert_space_chunked(from, to, colors);
     }
 }
@@ -66,7 +62,7 @@ pub struct Collurgy {
 impl Default for Collurgy {
     fn default() -> Self {
         Self {
-            model: Model::CIELCH,
+            model: Model::OKLCH,
             foreground: [100.0, 0.0, 0.0],
             background: [0.0; 3],
             spectrum: [50.0, 50.0, 30.0],
