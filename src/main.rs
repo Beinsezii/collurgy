@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ffi::OsStr, fs::read_to_string, path::PathBuf};
 
-use colcon::{convert_space_chunked, hk_high2023_comp, irgb_to_hex, srgb_to_irgb, Space};
+use colcon::{convert_space_chunked, irgb_to_hex, srgb_to_irgb, Space};
 use serde::{Deserialize, Serialize};
 
 mod gui;
@@ -10,36 +10,35 @@ use gui::CollurgyUI;
 pub enum Model {
     HSV,
     CIELCH,
-    CIELCH2023,
     OKLCH,
     JZCZHZ,
 }
 
 impl Model {
-    fn apply(&self, colors: &mut [[f32; 3]], to: colcon::Space) {
+    fn apply(&self, colors: &mut [[f32; 3]], to: colcon::Space, high2023: f32) {
         let from = match self {
-            Model::HSV => {
-                colors
-                    .iter_mut()
-                    .for_each(|col| *col = [col[2] / 360.0, col[1] / 100.0, col[0] / 100.0]);
-                Space::HSV
-            }
+            Model::HSV => Space::HSV,
             Model::CIELCH => Space::LCH,
             Model::OKLCH => Space::OKLCH,
             Model::JZCZHZ => Space::JZCZHZ,
-            Model::CIELCH2023 => {
-                colors.iter_mut().for_each(|col| hk_high2023_comp(col));
-                Space::LCH
-            }
         };
-        if Space::UCS_POLAR.contains(&from) {
+        // rescale to match SDR
+        if from == Space::HSV {
+            colors.iter_mut().for_each(|p| *p = [p[2] / 360.0, p[1] / 100.0, p[0] / 100.0]);
+        } else {
             colors.iter_mut().for_each(|p| {
-                // compensate downward precision loss to reach white
-                // on complex spaces like jzazbz
+                // 99.9 to compensate downward precision loss
+                // to reach white on complex spaces like jzazbz
                 p[0] = p[0] / 99.9 * from.srgb_quant100()[0];
                 p[1] = p[1] / 100.0 * from.srgb_quant95()[1];
             });
-        }
+            if high2023 != 0.0 {
+                colors.iter_mut().for_each(|col| {
+                    // seems like this actually kinda works?
+                    col[0] += (from.srgb_quant100()[0] * 0.2 - colcon::hk_high2023(col)) * (col[1] / from.srgb_quant95()[1]) * high2023
+                });
+            }
+        };
         convert_space_chunked(from, to, colors);
     }
 }
@@ -47,6 +46,10 @@ impl Model {
 #[derive(Serialize, Deserialize)]
 pub struct Collurgy {
     model: Model,
+    /// Compensation for the Helmholtz-Kohlrausch effect,
+    /// High et al 2023 implementation.
+    #[serde(default)]
+    high2023: f32,
     /// LCH
     foreground: [f32; 3],
     /// LCH
@@ -63,6 +66,7 @@ impl Default for Collurgy {
     fn default() -> Self {
         Self {
             model: Model::OKLCH,
+            high2023: 0.0,
             foreground: [100.0, 0.0, 0.0],
             background: [0.0; 3],
             spectrum: [50.0, 50.0, 30.0],
@@ -125,7 +129,7 @@ impl Collurgy {
         result[12] = brots.next().unwrap(); // Blue
         result[13] = brots.next().unwrap(); // Magenta
 
-        self.model.apply(&mut result, Space::SRGB);
+        self.model.apply(&mut result, Space::SRGB, self.high2023);
 
         result
     }

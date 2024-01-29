@@ -370,7 +370,6 @@ impl App for CollurgyUI {
                         for model in [
                             Model::HSV,
                             Model::CIELCH,
-                            Model::CIELCH2023,
                             Model::OKLCH,
                             Model::JZCZHZ,
                         ] {
@@ -379,6 +378,19 @@ impl App for CollurgyUI {
                             }
                         }
                     });
+                    let high2023 = self.data.high2023;
+                    ui.add_sized(
+                        (150.0, 20.0),
+                        ColorScale::new(
+                            &mut self.data.high2023,
+                            -1.0..=2.0,
+                            0.1,
+                            format!("HIGH 2023 COMP {:.1}", high2023),
+                            colors[self.data.accent],
+                            colors[0],
+                            15.0,
+                        ),
+                    );
                     Frame::none().fill(colors[0]).show(ui, |ui| {
                         ui.add_sized(
                             (300.0, 20.0),
@@ -401,6 +413,7 @@ impl App for CollurgyUI {
                             14.0 * s,
                             s * 2.0,
                             self.data.model,
+                            self.data.high2023,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.background,
@@ -409,6 +422,7 @@ impl App for CollurgyUI {
                             14.0 * s,
                             s * 2.0,
                             self.data.model,
+                            self.data.high2023,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.spectrum,
@@ -417,6 +431,7 @@ impl App for CollurgyUI {
                             14.0 * s,
                             s * 2.0,
                             self.data.model,
+                            self.data.high2023,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.spectrum_bright,
@@ -425,6 +440,7 @@ impl App for CollurgyUI {
                             14.0 * s,
                             s * 2.0,
                             self.data.model,
+                            self.data.high2023,
                         ));
                     });
                     Grid::new("color_buttons")
