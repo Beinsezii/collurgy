@@ -366,10 +366,10 @@ impl App for CollurgyUI {
                             15.0,
                         ),
                     );
-                    ui.menu_button(format!("Model: {:?}", self.data.space), |ui| {
+                    ui.menu_button(format!("Model: {:?}", self.data.model), |ui| {
                         for space in [Space::HSV].iter().chain(Space::UCS_POLAR) {
                             if ui.button(format!("{:?}", space)).clicked() {
-                                self.data.space = *space
+                                self.data.model = *space
                             }
                         }
                     });
@@ -407,7 +407,7 @@ impl App for CollurgyUI {
                             colors[0],
                             14.0 * s,
                             s * 2.0,
-                            self.data.space,
+                            self.data.model,
                             self.data.high2023,
                         ));
                         ui.add(LCH::new(
@@ -416,7 +416,7 @@ impl App for CollurgyUI {
                             colors[15],
                             14.0 * s,
                             s * 2.0,
-                            self.data.space,
+                            self.data.model,
                             self.data.high2023,
                         ));
                         ui.add(LCH::new(
@@ -425,7 +425,7 @@ impl App for CollurgyUI {
                             colors[0],
                             14.0 * s,
                             s * 2.0,
-                            self.data.space,
+                            self.data.model,
                             self.data.high2023,
                         ));
                         ui.add(LCH::new(
@@ -434,7 +434,7 @@ impl App for CollurgyUI {
                             colors[0],
                             14.0 * s,
                             s * 2.0,
-                            self.data.space,
+                            self.data.model,
                             self.data.high2023,
                         ));
                     });
@@ -460,7 +460,17 @@ impl App for CollurgyUI {
                                     ui.end_row()
                                 }
                             }
-                        })
+                        });
+                    for (fg, bg) in [
+                        (colors[15], colors[0]),
+                        (colors[7], colors[0]),
+                        (colors[15], colors[8]),
+                        (colors[7], colors[8]),
+                    ] {
+                        Frame::none().fill(bg).inner_margin(5.0 * s).show(ui, |ui| {
+                            ui.label(RichText::from(LI).color(fg).size(10.0 * s))
+                        });
+                    }
                 });
                 // }}}
             });

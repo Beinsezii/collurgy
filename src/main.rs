@@ -56,7 +56,7 @@ pub fn apply_space(space: Space, colors: &mut [[f32; 3]], to: colcon::Space, hig
 #[derive(Serialize, Deserialize)]
 pub struct Collurgy {
     #[serde(with = "SpaceSerDe")]
-    space: Space,
+    model: Space,
     /// Compensation for the Helmholtz-Kohlrausch effect,
     /// High et al 2023 implementation.
     #[serde(default)]
@@ -76,7 +76,7 @@ pub struct Collurgy {
 impl Default for Collurgy {
     fn default() -> Self {
         Self {
-            space: Space::OKLCH,
+            model: Space::OKLCH,
             high2023: 0.0,
             foreground: [100.0, 0.0, 0.0],
             background: [0.0; 3],
@@ -140,7 +140,7 @@ impl Collurgy {
         result[12] = brots.next().unwrap(); // Blue
         result[13] = brots.next().unwrap(); // Magenta
 
-        apply_space(self.space, &mut result, Space::SRGB, self.high2023);
+        apply_space(self.model, &mut result, Space::SRGB, self.high2023);
 
         result
     }
