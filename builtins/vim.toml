@@ -1,7 +1,7 @@
 name = "Vim"
 path = "colors.vim"
 
-extras = {CONSTANT = 11, IDENTIFIER = 14, STATEMENT = 12, PREPROC = 10, TYPE = 13, SPECIAL = 6, UNDERLINED = 3, ERROR = 9, TODO = 1}
+extras = {CONSTANT = 3, IDENTIFIER = 6, STATEMENT = 4, PREPROC = 2, TYPE = 5, SPECIAL = 10, UNDERLINED = 11, ERROR = 1, TODO = 9}
 
 formatter = """
 hi clear
