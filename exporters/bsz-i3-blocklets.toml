@@ -1,0 +1,8 @@
+name = "bsz-i3-blocklets"
+extras = {COLOR_HI=3, COLOR_LO=4, COLOR_ALT=2, COLOR_ERR=1}
+formatter = """
+COLOR_HI={COLOR_HIHEX}
+COLOR_LO={COLOR_LOHEX}
+COLOR_ALT={COLOR_ALTHEX}
+COLOR_ERR={COLOR_ERRHEX}
+"""
