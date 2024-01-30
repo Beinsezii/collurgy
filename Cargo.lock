@@ -691,7 +691,7 @@ dependencies = [
 [[package]]
 name = "colcon"
 version = "0.7.1"
-source = "git+https://github.com/Beinsezii/colcon.git#799743b7d1915e37ad4ec2efd3eac53eba3b6922"
+source = "git+https://github.com/Beinsezii/colcon.git#3bd37dc56c697fb45411fefc09f97650711e4995"
 
 [[package]]
 name = "collurgy"

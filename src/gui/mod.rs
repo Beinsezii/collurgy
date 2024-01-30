@@ -22,7 +22,7 @@ mod lch;
 use lch::LCH;
 use rfd::FileDialog;
 
-use super::{Collurgy, Exporter, Model};
+use super::{Collurgy, Exporter};
 
 const LI: &'static str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
@@ -366,10 +366,10 @@ impl App for CollurgyUI {
                             15.0,
                         ),
                     );
-                    ui.menu_button(format!("Model: {:?}", self.data.model), |ui| {
-                        for model in [Model::HSV, Model::CIELCH, Model::OKLCH, Model::JZCZHZ] {
-                            if ui.button(format!("{:?}", model)).clicked() {
-                                self.data.model = model
+                    ui.menu_button(format!("Model: {:?}", self.data.space), |ui| {
+                        for space in [Space::HSV].iter().chain(Space::UCS_POLAR) {
+                            if ui.button(format!("{:?}", space)).clicked() {
+                                self.data.space = *space
                             }
                         }
                     });
@@ -407,7 +407,7 @@ impl App for CollurgyUI {
                             colors[0],
                             14.0 * s,
                             s * 2.0,
-                            self.data.model,
+                            self.data.space,
                             self.data.high2023,
                         ));
                         ui.add(LCH::new(
@@ -416,7 +416,7 @@ impl App for CollurgyUI {
                             colors[15],
                             14.0 * s,
                             s * 2.0,
-                            self.data.model,
+                            self.data.space,
                             self.data.high2023,
                         ));
                         ui.add(LCH::new(
@@ -425,7 +425,7 @@ impl App for CollurgyUI {
                             colors[0],
                             14.0 * s,
                             s * 2.0,
-                            self.data.model,
+                            self.data.space,
                             self.data.high2023,
                         ));
                         ui.add(LCH::new(
@@ -434,7 +434,7 @@ impl App for CollurgyUI {
                             colors[0],
                             14.0 * s,
                             s * 2.0,
-                            self.data.model,
+                            self.data.space,
                             self.data.high2023,
                         ));
                     });
