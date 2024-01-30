@@ -18,7 +18,7 @@ impl Model {
     fn apply(&self, colors: &mut [[f32; 3]], to: colcon::Space, high2023: f32) {
         let from = match self {
             Model::HSV => Space::HSV,
-            Model::CIELCH => Space::LCH,
+            Model::CIELCH => Space::CIELCH,
             Model::OKLCH => Space::OKLCH,
             Model::JZCZHZ => Space::JZCZHZ,
         };
