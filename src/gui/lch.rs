@@ -1,5 +1,5 @@
-use colcon::Space;
 use crate::apply_space;
+use colcon::Space;
 use eframe::{
     egui::{self, Label, RichText, Sense, TextureOptions, Widget},
     epaint::{Color32, ColorImage, Rect, Rgba, Stroke},
