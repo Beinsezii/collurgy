@@ -84,17 +84,4 @@ exe 'hi User6 guifg='.s:bg.' guibg='.s:special
 exe 'hi User7 guifg='.s:bg.' guibg='.s:error
 exe 'hi User8 guifg='.s:bg.' guibg='.s:underlined
 exe 'hi User9 guifg='.s:bg.' guibg='.s:todo
-
-
-\" ## Vim Rainbow ##
-let g:rainbow_conf = { 'guifgs': [''.s:constant, ''.s:identifier, ''.s:statement, ''.s:preproc, ''.s:type], }
-
-\" ## Nvim-ts-rainbow ##
-exe 'hi rainbowcol1 guifg='.s:constant
-exe 'hi rainbowcol2 guifg='.s:identifier
-exe 'hi rainbowcol3 guifg='.s:statement
-exe 'hi rainbowcol4 guifg='.s:preproc
-exe 'hi rainbowcol5 guifg='.s:type
-exe 'hi rainbowcol6 guifg='.s:special
-exe 'hi rainbowcol7 guifg='.s:error
 """
