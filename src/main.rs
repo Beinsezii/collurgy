@@ -71,6 +71,8 @@ pub struct Collurgy {
     spectrum_bright: [f32; 3],
     /// Which # should be accent
     accent: usize,
+    #[serde(default)]
+    extras: HashMap<String, HashMap<String, usize>>,
 }
 
 impl Default for Collurgy {
@@ -83,6 +85,7 @@ impl Default for Collurgy {
             spectrum: [50.0, 50.0, 30.0],
             spectrum_bright: [70.0, 50.0, 30.0],
             accent: 11, // Bright Yellow
+            extras: HashMap::new()
         }
     }
 }
@@ -155,7 +158,7 @@ pub struct Exporter {
 }
 
 impl Exporter {
-    fn export(&self, data: &Collurgy, extras: &Option<HashMap<String, usize>>) -> String {
+    fn export(&self, data: &Collurgy) -> String {
         let frgb = data.compute();
         let irgb = frgb.map(|pixel| srgb_to_irgb(pixel));
         let hex = irgb.map(|pixel| irgb_to_hex(pixel));
@@ -192,7 +195,7 @@ impl Exporter {
             ("{ACCHEX}".to_string(), hex[data.accent].clone()),
         ]);
 
-        if let Some(ext) = extras.as_ref().or(self.extras.as_ref()) {
+        if let Some(ext) = data.extras.get(&String::from(&self.name)) {
             for (id, n) in ext {
                 if let (Some(iv), Some(fv), Some(hv)) = (irgb.get(*n), frgb.get(*n), hex.get(*n)) {
                     swaps.append(&mut vec![

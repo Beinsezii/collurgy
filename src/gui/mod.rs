@@ -193,7 +193,6 @@ impl Display for Output {
 pub struct CollurgyUI {
     data: Collurgy,
     exporters: HashMap<String, Exporter>,
-    extras: Option<HashMap<String, usize>>,
     output: Output,
     scale: f32,
 }
@@ -202,20 +201,27 @@ impl CollurgyUI {
     // {{{
     pub fn new(
         _cc: &CreationContext,
-        data: Collurgy,
+        mut data: Collurgy,
         exporters: HashMap<String, Exporter>,
     ) -> Self {
+        // Fill missing extras into data
+        for (k, v) in exporters.iter() {
+            if let Some(extras) = &v.extras {
+                if !data.extras.contains_key(k) {
+                    data.extras.insert(k.to_string(), extras.clone());
+                }
+            }
+        }
         Self {
             data,
             output: Output::TOML,
             exporters,
-            extras: None,
             scale: scale_factor(),
         }
     }
-    fn output(&self) -> String {
+    fn process_output(&self) -> String {
         match &self.output {
-            Output::Exporter(s) => self.exporters[s].export(&self.data, &self.extras),
+            Output::Exporter(s) => self.exporters[s].export(&self.data),
             Output::JSON => serde_json::to_string(&self.data).unwrap(),
             Output::TOML => toml::to_string(&self.data).unwrap(),
         }
@@ -227,18 +233,13 @@ impl CollurgyUI {
             self.data = collurgy
         }
     }
-    fn set(&mut self, output: Output) {
-        self.extras = match &output {
-            Output::Exporter(e) => self.exporters[e].extras.clone(),
-            _ => None,
-        };
-        self.output = output;
-    }
     // }}}
 }
 
 impl App for CollurgyUI {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
+        // {{{
+        // DnD
         ctx.input(|input| {
             for f in &input.raw.dropped_files {
                 if let Some(bytes) = &f.bytes {
@@ -260,29 +261,29 @@ impl App for CollurgyUI {
         SidePanel::right("ExportPan")
             .min_width(200.0)
             .show(ctx, |ui| {
+                // EXPORTER HEADER {{{
                 ui.horizontal(|ui| {
-                    // {{{
                     ui.menu_button(self.output.to_string(), |ui| {
                         let mut vals: Vec<String> = self.exporters.keys().cloned().collect();
                         vals.sort();
                         for exp in vals.into_iter() {
                             if ui.button(format!("Export/{}", &exp)).clicked() {
-                                self.set(Output::Exporter(exp));
+                                self.output = Output::Exporter(exp);
                                 ui.close_menu();
                             }
                         }
                         if ui.button("Save/JSON").clicked() {
-                            self.set(Output::JSON);
+                            self.output = Output::JSON;
                             ui.close_menu();
                         }
                         if ui.button("Save/TOML").clicked() {
-                            self.set(Output::TOML);
+                            self.output = Output::TOML;
                             ui.close_menu();
                         }
                     });
                     if ui.button("Copy").clicked() {
                         ui.output_mut(|o| {
-                            o.copied_text = self.output();
+                            o.copied_text = self.process_output();
                         });
                     }
                     if ui.button("Save").clicked() {
@@ -306,7 +307,7 @@ impl App for CollurgyUI {
                         }
                         // on Wayland this has like a 75% chance of making egui go poof
                         if let Some(file) = dialog.save_file() {
-                            let _ = fs::write(file, self.output());
+                            let _ = fs::write(file, self.process_output());
                         }
                     }
                     if ui.button("Load").clicked() {
@@ -319,40 +320,50 @@ impl App for CollurgyUI {
                             }
                         }
                     }
-                    // }}}
                 });
+                // EXPORTER HEADER }}}
+                // EXPORTER {{{
                 ScrollArea::both().show(ui, |ui| {
-                    if let Some(extras) = self.extras.as_mut() {
-                        let mut sorted: Vec<(&String, &mut usize)> = extras.iter_mut().collect();
-                        sorted.sort_unstable_by(|a, b| a.0.cmp(b.0));
-                        for (id, n) in sorted.into_iter() {
-                            if *n < 16 {
-                                ui.horizontal(|ui| {
-                                    ui.label(
-                                        RichText::new(id)
-                                            .background_color(if *n != 0 {
-                                                colors[0]
-                                            } else {
-                                                colors[15]
-                                            })
-                                            .color(colors[*n]),
-                                    );
-                                    ui.add(DragValue::new(n).clamp_range(0..=15));
-                                });
+                    if let Output::Exporter(e) = &self.output {
+                        if let Some(extras) = self.data.extras.get_mut(&self.exporters[e].name) {
+                            let mut sorted: Vec<(&String, &mut usize)> =
+                                extras.iter_mut().collect();
+                            sorted.sort_unstable_by(|a, b| a.0.cmp(b.0));
+                            for (id, n) in sorted.into_iter() {
+                                if *n < 16 {
+                                    ui.horizontal(|ui| {
+                                        ui.label(
+                                            RichText::new(id)
+                                                .background_color(if *n != 0 {
+                                                    colors[0]
+                                                } else {
+                                                    colors[15]
+                                                })
+                                                .color(colors[*n]),
+                                        );
+                                        ui.add(DragValue::new(n).clamp_range(0..=15));
+                                    });
+                                }
+                            }
+                            if ui.button("Reset All").clicked() {
+                                if let Some(new_extras) = &self.exporters[e].extras {
+                                    *extras = new_extras.clone()
+                                }
                             }
                         }
                     }
                     // sneaky immutable textedit hack?
                     // ui.code_editor(&mut self.output().as_str());
                     // textedit always wraps???
-                    ui.add(Label::new(self.output()).wrap(false))
+                    ui.add(Label::new(self.process_output()).wrap(false))
                 });
+                // EXPORTER }}}
             });
         let fill = colcon::str2space("oklab 0.5 0 0", Space::SRGB).unwrap();
         CentralPanel::default()
             .frame(Frame::none().fill(Rgba::from_rgb(fill[0], fill[1], fill[2]).into()))
             .show(&ctx, |ui| {
-                // {{{
+                // HEADER {{{
                 ui.horizontal(|ui| {
                     ui.add_sized(
                         (150.0, 20.0),
@@ -397,8 +408,10 @@ impl App for CollurgyUI {
                         )
                     });
                 });
+                // HEADER }}}
                 ScrollArea::both().show(ui, |ui| {
                     ui.spacing_mut().item_spacing = (4.0 * s, 4.0 * s).into();
+                    // LCH PICKERS {{{
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing = (4.0 * s, 1.0 * s).into();
                         ui.add(LCH::new(
@@ -438,6 +451,8 @@ impl App for CollurgyUI {
                             self.data.high2023,
                         ));
                     });
+                    // LCH PICKERS }}}
+                    // COLOR BUTTONS {{{
                     Grid::new("color_buttons")
                         .spacing((4.0 * s, 4.0 * s))
                         .show(ui, |ui| {
@@ -461,6 +476,8 @@ impl App for CollurgyUI {
                                 }
                             }
                         });
+                    // COLOR BUTTONS }}}
+                    // LOREM IPSUM {{{
                     for (fg, bg) in [
                         (colors[15], colors[0]),
                         (colors[7], colors[0]),
@@ -471,10 +488,10 @@ impl App for CollurgyUI {
                             ui.label(RichText::from(LI).color(fg).size(10.0 * s))
                         });
                     }
+                    // }}}
                 });
-                // }}}
             });
-    }
+    } // }}}
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         [0.0, 0.0, 0.0, 0.0]
     }

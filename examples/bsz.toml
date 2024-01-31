@@ -5,3 +5,20 @@ background = [0.0, 0.0, 60.0]
 spectrum = [50.0, 50.0, 20.0]
 spectrum_bright = [50.0, 50.0, 355.0]
 accent = 3
+
+[extras.bsz-i3-blocklets]
+COLOR_ALT = 2
+COLOR_LO = 4
+COLOR_HI = 3
+COLOR_ERR = 1
+
+[extras.Vim]
+SPECIAL = 10
+STATEMENT = 6
+TYPE = 5
+UNDERLINED = 11
+IDENTIFIER = 12
+PREPROC = 2
+ERROR = 1
+TODO = 9
+CONSTANT = 3
