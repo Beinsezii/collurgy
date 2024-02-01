@@ -422,6 +422,7 @@ impl App for CollurgyUI {
                             s * 2.0,
                             self.data.model,
                             self.data.high2023,
+                            false,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.background,
@@ -431,6 +432,7 @@ impl App for CollurgyUI {
                             s * 2.0,
                             self.data.model,
                             self.data.high2023,
+                            false,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.spectrum,
@@ -440,6 +442,7 @@ impl App for CollurgyUI {
                             s * 2.0,
                             self.data.model,
                             self.data.high2023,
+                            true,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.spectrum_bright,
@@ -449,6 +452,7 @@ impl App for CollurgyUI {
                             s * 2.0,
                             self.data.model,
                             self.data.high2023,
+                            true,
                         ));
                     });
                     // LCH PICKERS }}}

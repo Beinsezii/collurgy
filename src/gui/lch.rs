@@ -13,6 +13,7 @@ pub struct LCH<'a> {
     scale: f32,
     space: Space,
     high2023: f32,
+    spectrum: bool,
 }
 
 impl<'a> LCH<'a> {
@@ -24,6 +25,7 @@ impl<'a> LCH<'a> {
         scale: f32,
         space: Space,
         high2023: f32,
+        spectrum: bool,
     ) -> Self {
         Self {
             value,
@@ -33,6 +35,7 @@ impl<'a> LCH<'a> {
             scale,
             space,
             high2023,
+            spectrum,
         }
     }
 }
@@ -138,24 +141,26 @@ impl<'a> Widget for LCH<'a> {
                         );
                     }
                     // other ticks
-                    for y in [1.0, -1.0] {
-                        for n in 1..6 {
-                            let pos = egui::Pos2 {
-                                x: (chpos.x - chrect.left() + n as f32 * chrect.width() / 6.0)
-                                    .rem_euclid(chrect.width())
-                                    + chrect.left(),
-                                y: chpos.y,
-                            };
-                            chpaint.line_segment(
-                                [
-                                    pos + (0.0, y * self.scale).into(),
-                                    pos + (0.0, y * 2.0 * self.scale).into(),
-                                ],
-                                Stroke {
-                                    color: self.fill,
-                                    width: 1.0 * self.scale,
-                                },
-                            );
+                    if self.spectrum {
+                        for y in [1.0, -1.0] {
+                            for n in 1..6 {
+                                let pos = egui::Pos2 {
+                                    x: (chpos.x - chrect.left() + n as f32 * chrect.width() / 6.0)
+                                        .rem_euclid(chrect.width())
+                                        + chrect.left(),
+                                    y: chpos.y,
+                                };
+                                chpaint.line_segment(
+                                    [
+                                        pos + (0.0, y * self.scale).into(),
+                                        pos + (0.0, y * 2.0 * self.scale).into(),
+                                    ],
+                                    Stroke {
+                                        color: self.fill,
+                                        width: 1.0 * self.scale,
+                                    },
+                                );
+                            }
                         }
                     }
 
