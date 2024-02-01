@@ -133,11 +133,11 @@ impl<'a> Widget for LCH<'a> {
                         chpaint.line_segment(
                             [
                                 chpos + (x * self.scale, y * self.scale).into(),
-                                chpos + (x * 3.0 * self.scale, y * 5.0 * self.scale).into(),
+                                chpos + (x * 5.0 * self.scale, y * 5.0 * self.scale).into(),
                             ],
                             Stroke {
                                 color: self.fill,
-                                width: 1.0 * self.scale,
+                                width: 0.5 * self.scale,
                             },
                         );
                     }
@@ -158,7 +158,7 @@ impl<'a> Widget for LCH<'a> {
                                     ],
                                     Stroke {
                                         color: self.fill,
-                                        width: 1.0 * self.scale,
+                                        width: 0.5 * self.scale,
                                     },
                                 );
                             }
@@ -198,11 +198,11 @@ impl<'a> Widget for LCH<'a> {
                         lpaint.line_segment(
                             [
                                 lpos + (x * self.scale, y * self.scale).into(),
-                                lpos + (x * 5.0 * self.scale, y * 3.0 * self.scale).into(),
+                                lpos + (x * 7.0 * self.scale, y * 3.0 * self.scale).into(),
                             ],
                             Stroke {
                                 color: self.fill,
-                                width: 1.0 * self.scale,
+                                width: 0.5 * self.scale,
                             },
                         );
                     }
