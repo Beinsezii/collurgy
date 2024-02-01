@@ -124,6 +124,7 @@ impl<'a> Widget for LCH<'a> {
                         )
                             .into();
 
+                    // crosshair
                     for (x, y) in [(0.0, 1.0), (0.0, -1.0), (1.0, 0.0), (-1.0, 0.0)] {
                         chpaint.line_segment(
                             [
@@ -135,6 +136,27 @@ impl<'a> Widget for LCH<'a> {
                                 width: 1.0 * self.scale,
                             },
                         );
+                    }
+                    // other ticks
+                    for y in [1.0, -1.0] {
+                        for n in 1..6 {
+                            let pos = egui::Pos2 {
+                                x: (chpos.x - chrect.left() + n as f32 * chrect.width() / 6.0)
+                                    .rem_euclid(chrect.width())
+                                    + chrect.left(),
+                                y: chpos.y,
+                            };
+                            chpaint.line_segment(
+                                [
+                                    pos + (0.0, y * self.scale).into(),
+                                    pos + (0.0, y * 2.0 * self.scale).into(),
+                                ],
+                                Stroke {
+                                    color: self.fill,
+                                    width: 1.0 * self.scale,
+                                },
+                            );
+                        }
                     }
 
                     // L slider
