@@ -9,7 +9,7 @@ if exists(\"syntax_on\")
   syn reset
 endif
 
-let g:colors_name=\"Lunarized\"
+let g:colors_name=\"{NAME}\"
 
 \" Vars for easy setting
 let s:fg = '{HEX15}'

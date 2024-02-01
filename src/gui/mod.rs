@@ -377,6 +377,7 @@ impl App for CollurgyUI {
                             15.0,
                         ),
                     );
+                    ui.add(egui::TextEdit::singleline(&mut self.data.name).desired_width(100.0));
                     ui.menu_button(format!("Model: {:?}", self.data.model), |ui| {
                         for space in [Space::HSV].iter().chain(Space::UCS_POLAR) {
                             if ui.button(format!("{:?}", space)).clicked() {

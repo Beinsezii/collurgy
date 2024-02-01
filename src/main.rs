@@ -55,6 +55,7 @@ pub fn apply_space(space: Space, colors: &mut [[f32; 3]], to: colcon::Space, hig
 
 #[derive(Serialize, Deserialize)]
 pub struct Collurgy {
+    name: String,
     #[serde(with = "SpaceSerDe")]
     model: Space,
     /// Compensation for the Helmholtz-Kohlrausch effect,
@@ -78,6 +79,7 @@ pub struct Collurgy {
 impl Default for Collurgy {
     fn default() -> Self {
         Self {
+            name: String::from("Collurgy"),
             model: Space::OKLCH,
             high2023: 0.0,
             foreground: [100.0, 0.0, 0.0],
@@ -193,6 +195,7 @@ impl Exporter {
             ("{ACCFG}".to_string(), frgb[data.accent][1].to_string()),
             ("{ACCFB}".to_string(), frgb[data.accent][2].to_string()),
             ("{ACCHEX}".to_string(), hex[data.accent].clone()),
+            ("{NAME}".to_string(), data.name.clone()),
         ]);
 
         if let Some(ext) = data.extras.get(&String::from(&self.name)) {

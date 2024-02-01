@@ -1,3 +1,4 @@
+name = "Solarized"
 model = "CIELCH"
 high2023 = 0.0
 foreground = [65.0, 5.0, 200.0]
