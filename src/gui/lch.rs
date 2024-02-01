@@ -62,19 +62,20 @@ impl<'a> Widget for LCH<'a> {
             let texres = ui
                 .horizontal(|ui| {
                     let (chrect, chresponse) = ui.allocate_at_least(
-                        (72.0 * self.scale, 100.0 * self.scale).into(),
+                        (72.0 * self.scale, 101.0 * self.scale).into(),
                         Sense::click_and_drag(),
                     );
                     let (lrect, lresponse) = ui.allocate_at_least(
-                        (10.0 * self.scale, 100.0 * self.scale).into(),
+                        (10.0 * self.scale, 101.0 * self.scale).into(),
                         Sense::click_and_drag(),
                     );
                     if chresponse.dragged() {
                         if let Some(pos) = chresponse.interact_pointer_pos() {
                             if chrect.contains(pos) {
                                 let (x, y) = (pos - chrect.left_top()).into();
-                                self.value[1] = 100.0 - (y / self.scale).round();
-                                self.value[2] = (x / self.scale).round() * 5.0;
+                                self.value[1] = 100.0 - (y / self.scale - 0.5).round().max(0.0);
+                                self.value[2] =
+                                    (x / self.scale - 0.5).round().clamp(0.0, 71.0).abs() * 5.0;
                             }
                         }
                     }
@@ -82,7 +83,7 @@ impl<'a> Widget for LCH<'a> {
                         if let Some(pos) = lresponse.interact_pointer_pos() {
                             if lrect.contains(pos) {
                                 let y = (pos - lrect.left_top()).y;
-                                self.value[0] = 100.0 - (y / self.scale).round();
+                                self.value[0] = 100.0 - (y / self.scale - 0.5).round().max(0.0);
                             }
                         }
                     }
@@ -122,17 +123,17 @@ impl<'a> Widget for LCH<'a> {
                     );
                     let chpos = chrect.left_top()
                         + (
-                            self.value[2] / 5.0 * self.scale,
-                            (100.0 - self.value[1]) * self.scale,
+                            (self.value[2] / 5.0 + 0.5) * self.scale,
+                            (100.0 - self.value[1] + 0.5) * self.scale,
                         )
                             .into();
 
                     // crosshair
-                    for (x, y) in [(0.0, 1.0), (0.0, -1.0), (1.0, 0.0), (-1.0, 0.0)] {
+                    for (x, y) in [(0.0, 0.5), (0.0, -0.5), (0.5, 0.0), (-0.5, 0.0)] {
                         chpaint.line_segment(
                             [
                                 chpos + (x * self.scale, y * self.scale).into(),
-                                chpos + (x * 4.0 * self.scale, y * 4.0 * self.scale).into(),
+                                chpos + (x * 3.0 * self.scale, y * 5.0 * self.scale).into(),
                             ],
                             Stroke {
                                 color: self.fill,
@@ -142,7 +143,7 @@ impl<'a> Widget for LCH<'a> {
                     }
                     // other ticks
                     if self.spectrum {
-                        for y in [1.0, -1.0] {
+                        for y in [0.5, -0.5] {
                             for n in 1..6 {
                                 let pos = egui::Pos2 {
                                     x: (chpos.x - chrect.left() + n as f32 * chrect.width() / 6.0)
@@ -153,7 +154,7 @@ impl<'a> Widget for LCH<'a> {
                                 chpaint.line_segment(
                                     [
                                         pos + (0.0, y * self.scale).into(),
-                                        pos + (0.0, y * 2.0 * self.scale).into(),
+                                        pos + (0.0, y * 3.0 * self.scale).into(),
                                     ],
                                     Stroke {
                                         color: self.fill,
@@ -190,13 +191,14 @@ impl<'a> Widget for LCH<'a> {
                         Rect::from_min_max((0.0, 0.0).into(), (1.0, 1.0).into()),
                         Color32::WHITE,
                     );
-                    let lpos =
-                        lrect.center_top() + (0.0, ((100.0 - self.value[0]) * self.scale)).into();
-                    for (x, y) in [(0.0, 1.0), (0.0, -1.0), (1.0, 0.0), (-1.0, 0.0)] {
+                    let lpos = lrect.center_top()
+                        + (0.0, ((100.0 - self.value[0] + 0.5) * self.scale)).into();
+                    // crosshair
+                    for (x, y) in [(0.0, 0.5), (0.0, -0.5), (0.5, 0.0), (-0.5, 0.0)] {
                         lpaint.line_segment(
                             [
                                 lpos + (x * self.scale, y * self.scale).into(),
-                                lpos + (x * 4.0 * self.scale, y * 4.0 * self.scale).into(),
+                                lpos + (x * 5.0 * self.scale, y * 3.0 * self.scale).into(),
                             ],
                             Stroke {
                                 color: self.fill,
