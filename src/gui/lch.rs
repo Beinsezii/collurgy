@@ -230,16 +230,16 @@ impl<'a> Widget for LCH<'a> {
                 })
                 .response;
 
-            // let mut hex = *self.value;
-            // convert_space(Space::LCH, Space::SRGB, &mut hex);
-            // let hex = irgb_to_hex(srgb_to_irgb(hex));
+            // let mut hex = [*self.value];
+            // apply_space(self.space, &mut hex, Space::SRGB, self.high2023);
+            // let hex = colcon::irgb_to_hex(colcon::srgb_to_irgb(hex[0]));
             // let mut buff = hex.clone();
-            // Frame::none().fill(self.fill).show(ui, |ui| {
-            //     ui.add(
-            //         TextEdit::singleline(&mut buff)
-            //             .font(FontId::monospace(self.font_size))
+            // egui::Frame::none().fill(self.fill).show(ui, |ui| {
+            //     ui.add_sized(
+            //         (self.font_size * 5.0, self.font_size),
+            //         egui::TextEdit::singleline(&mut buff)
+            //             .font(egui::FontId::monospace(self.font_size))
             //             .text_color(fg)
-            //             .min_size((self.font_size * 2.0, self.font_size).into())
             //             .frame(false),
             //     )
             // });
