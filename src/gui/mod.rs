@@ -195,6 +195,7 @@ pub struct CollurgyUI {
     exporters: HashMap<String, Exporter>,
     output: Output,
     scale: f32,
+    clip: bool,
 }
 
 impl CollurgyUI {
@@ -217,6 +218,7 @@ impl CollurgyUI {
             output: Output::TOML,
             exporters,
             scale: scale_factor(),
+            clip: false,
         }
     }
     fn process_output(&self) -> String {
@@ -385,6 +387,7 @@ impl App for CollurgyUI {
                             }
                         }
                     });
+                    ui.checkbox(&mut self.clip, "Hide clipped values");
                     let high2023 = self.data.high2023;
                     ui.add_sized(
                         (150.0, 20.0),
@@ -424,6 +427,7 @@ impl App for CollurgyUI {
                             self.data.model,
                             self.data.high2023,
                             false,
+                            self.clip,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.background,
@@ -434,6 +438,7 @@ impl App for CollurgyUI {
                             self.data.model,
                             self.data.high2023,
                             false,
+                            self.clip,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.spectrum,
@@ -444,6 +449,7 @@ impl App for CollurgyUI {
                             self.data.model,
                             self.data.high2023,
                             true,
+                            self.clip,
                         ));
                         ui.add(LCH::new(
                             &mut self.data.spectrum_bright,
@@ -454,6 +460,7 @@ impl App for CollurgyUI {
                             self.data.model,
                             self.data.high2023,
                             true,
+                            self.clip,
                         ));
                     });
                     // LCH PICKERS }}}

@@ -14,6 +14,16 @@ pub struct LCH<'a> {
     space: Space,
     high2023: f32,
     spectrum: bool,
+    clip: bool,
+}
+
+fn clip(pixels: &mut [[f32; 3]]) {
+    let fill: [f32; 3] = colcon::str2space("oklab 0.5 0 0", Space::SRGB).unwrap();
+    pixels.iter_mut().for_each(|p| {
+        if p.iter().any(|c| *c < 0.0 || *c > 1.0) {
+            *p = fill
+        }
+    })
 }
 
 impl<'a> LCH<'a> {
@@ -26,6 +36,7 @@ impl<'a> LCH<'a> {
         space: Space,
         high2023: f32,
         spectrum: bool,
+        clip: bool,
     ) -> Self {
         Self {
             value,
@@ -36,6 +47,7 @@ impl<'a> LCH<'a> {
             space,
             high2023,
             spectrum,
+            clip,
         }
     }
 }
@@ -101,7 +113,11 @@ impl<'a> Widget for LCH<'a> {
                             acc
                         })
                         .unwrap();
+
                     apply_space(self.space, &mut pixels, Space::LRGB, self.high2023);
+                    if self.clip {
+                        clip(&mut pixels)
+                    }
 
                     let chimg = ColorImage {
                         size: [72, 101],
@@ -171,7 +187,11 @@ impl<'a> Widget for LCH<'a> {
                     let mut pixels: Vec<[f32; 3]> = (0..=100)
                         .map(|l| [(100 - l) as f32, self.value[1], self.value[2]])
                         .collect::<Vec<[f32; 3]>>();
+
                     apply_space(self.space, &mut pixels, Space::LRGB, self.high2023);
+                    if self.clip {
+                        clip(&mut pixels)
+                    }
 
                     let limg = ColorImage {
                         size: [1, 101],
