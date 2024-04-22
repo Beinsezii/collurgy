@@ -90,6 +90,21 @@ impl Widget for ColorButton {
         response
     }
 }
+
+fn color_button_toggle(
+    text: impl ToString,
+    color: Color32,
+    fill: Color32,
+    font_size: f32,
+    value: bool,
+) -> ColorButton {
+    ColorButton::new(
+        text,
+        if value { fill } else { color },
+        if value { color } else { fill },
+        font_size,
+    )
+}
 // ColorButton }}}
 
 // ColorScale {{{
@@ -387,7 +402,21 @@ impl App for CollurgyUI {
                             }
                         }
                     });
-                    ui.checkbox(&mut self.clip, "Hide clipped values");
+                    if ui
+                        .add_sized(
+                            (160.0, 20.0),
+                            color_button_toggle(
+                                "Toggle clipped values",
+                                colors[self.data.accent],
+                                colors[0],
+                                15.0,
+                                self.clip,
+                            ),
+                        )
+                        .clicked()
+                    {
+                        self.clip = !self.clip
+                    };
                     let high2023 = self.data.high2023;
                     ui.add_sized(
                         (150.0, 20.0),
