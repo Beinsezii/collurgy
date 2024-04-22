@@ -18,7 +18,7 @@ pub struct LCH<'a> {
 }
 
 fn clip(pixels: &mut [[f32; 3]]) {
-    let fill: [f32; 3] = colcon::str2space("oklab 0.5 0 0", Space::SRGB).unwrap();
+    let fill: [f32; 3] = colcon::str2space("oklab 50% 0 0", Space::SRGB).unwrap();
     pixels.iter_mut().for_each(|p| {
         if p.iter().any(|c| *c < 0.0 || *c > 1.0) {
             *p = fill

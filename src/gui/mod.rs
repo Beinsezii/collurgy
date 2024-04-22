@@ -376,7 +376,7 @@ impl App for CollurgyUI {
                 });
                 // EXPORTER }}}
             });
-        let fill = colcon::str2space("oklab 0.5 0 0", Space::SRGB).unwrap();
+        let fill = colcon::str2space("oklab 50% 0 0", Space::SRGB).unwrap();
         CentralPanel::default()
             .frame(Frame::none().fill(Rgba::from_rgb(fill[0], fill[1], fill[2]).into()))
             .show(&ctx, |ui| {
@@ -533,7 +533,4 @@ impl App for CollurgyUI {
                 });
             });
     } // }}}
-    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
-        [0.0, 0.0, 0.0, 0.0]
-    }
 }
