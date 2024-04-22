@@ -17,5 +17,5 @@ toml = "0.8"
 
 [features]
 builtins = []
-default = ["builtins"]
 wayland = ["eframe/wayland"]
+default = ["builtins", "wayland"]
