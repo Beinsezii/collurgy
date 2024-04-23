@@ -11,7 +11,7 @@ colcon = "0.8"
 # disable wayland
 eframe = {version = "0.27", default_features=false, features=["accesskit", "default_fonts", "x11", "wgpu"]}
 rfd = "0.14"
-serde = "1"
+serde = {version = "1", features = ["std", "derive"]}
 serde_json = "1"
 toml = "0.8"
 
