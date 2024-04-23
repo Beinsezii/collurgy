@@ -1,6 +1,8 @@
 # Collurgy
 A simple theme creation tool centering around the idea of a Uniform Color Space (UCS) for pleasant hue/chroma distributions.
 
+<img src="./screenshot.png" height = 400px />
+
 ## Features
   * Many color spaces: CIE Lab, Oklab, JzAzBz, HSV
   * Many [built-in exporters](./builtins/)
