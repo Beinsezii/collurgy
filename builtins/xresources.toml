@@ -13,6 +13,7 @@ formatter = """
 *color5:         {HEX5}
 *color6:         {HEX6}
 *color7:         {HEX7}
+
 *color8:         {HEX8}
 *color9:         {HEX9}
 *color10:        {HEX10}
