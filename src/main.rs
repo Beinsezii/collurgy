@@ -38,14 +38,14 @@ pub fn apply_space(space: Space, colors: &mut [[f32; 3]], to: colcon::Space, hig
         colors.iter_mut().for_each(|p| {
             // 99.9 to compensate downward precision loss
             // to reach white on complex spaces like jzazbz
-            p[0] = p[0] / 99.9 * space.srgb_quant100()[0];
-            p[1] = p[1] / 100.0 * space.srgb_quant95()[1];
+            p[0] = p[0] / 99.9 * space.srgb_quants()[100][0];
+            p[1] = p[1] / 100.0 * space.srgb_quants()[95][1];
         });
         if high2023 != 0.0 {
             colors.iter_mut().for_each(|col| {
                 // seems like this actually kinda works?
-                col[0] += (space.srgb_quant100()[0] * 0.2 - colcon::hk_high2023(col))
-                    * (col[1] / space.srgb_quant95()[1])
+                col[0] += (space.srgb_quants()[100][0] * 0.2 - colcon::hk_high2023(col))
+                    * (col[1] / space.srgb_quants()[95][1])
                     * high2023
             });
         }
@@ -87,7 +87,7 @@ impl Default for Collurgy {
             spectrum: [50.0, 50.0, 30.0],
             spectrum_bright: [70.0, 50.0, 30.0],
             accent: 11, // Bright Yellow
-            extras: HashMap::new()
+            extras: HashMap::new(),
         }
     }
 }

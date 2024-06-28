@@ -749,8 +749,7 @@ dependencies = [
 [[package]]
 name = "colcon"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5bb42bf17bbb92620eeebd78e7bbf94a69f4593200e0d29a8a35e52cec28544"
+source = "git+https://github.com/Beinsezii/colcon.git#f6adbe31d33ee9c610f9a1455ab48d520d21c35e"
 
 [[package]]
 name = "collurgy"
