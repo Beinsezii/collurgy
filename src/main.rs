@@ -36,9 +36,7 @@ pub fn apply_space(space: Space, colors: &mut [[f32; 3]], to: colcon::Space, hig
             .for_each(|p| *p = [p[2] / 360.0, p[1] / 100.0, p[0] / 100.0]);
     } else {
         colors.iter_mut().for_each(|p| {
-            // 99.9 to compensate downward precision loss
-            // to reach white on complex spaces like jzazbz
-            p[0] = p[0] / 99.9 * space.srgb_quants()[100][0];
+            p[0] = p[0] / 100.0 * space.srgb_quants()[100][0];
             p[1] = p[1] / 100.0 * space.srgb_quants()[95][1];
         });
         if high2023 != 0.0 {
